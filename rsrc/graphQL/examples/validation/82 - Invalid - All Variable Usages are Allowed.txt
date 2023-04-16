@@ -1,0 +1,5 @@
+query booleanListCannotGoIntoBoolean($booleanListArg: [Boolean]) {
+  arguments {
+    booleanArgField(booleanArg: $booleanListArg)
+  }
+}

@@ -1,0 +1,5 @@
+query booleanArgQuery($booleanArg: Boolean) {
+  arguments {
+    nonNullBooleanArgField(nonNullBooleanArg: $booleanArg)
+  }
+}

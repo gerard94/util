@@ -1,0 +1,9 @@
+{
+	dog {
+		... invalidArgName
+	}
+}
+
+fragment invalidArgName on Dog {
+  doesKnowCommand(command: CLEAN_UP_HOUSE)
+}

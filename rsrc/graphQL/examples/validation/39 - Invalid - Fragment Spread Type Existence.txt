@@ -1,0 +1,16 @@
+{
+	dog {
+		... notOnExistingType
+		... inlineNotExistingType
+	}
+}
+
+fragment notOnExistingType on NotInSchema {
+  name
+}
+
+fragment inlineNotExistingType on Dog {
+  ... on NotInSchema {
+    name
+  }
+}

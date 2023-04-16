@@ -1,0 +1,13 @@
+query Books {
+	books {
+		id
+		title
+		publishDate
+		publisher {
+			name
+		}
+		authors {
+			name
+		}
+  }
+}

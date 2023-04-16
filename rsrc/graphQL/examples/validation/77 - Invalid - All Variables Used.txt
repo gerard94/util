@@ -1,0 +1,5 @@
+query variableUnused($atOtherHomes: Boolean) {
+  dog {
+    isHousetrained
+  }
+}

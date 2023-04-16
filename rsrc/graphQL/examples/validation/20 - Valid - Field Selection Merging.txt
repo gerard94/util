@@ -1,0 +1,21 @@
+query query1 {
+	dog {
+		... mergeIdenticalFieldsWithIdenticalArgs
+	}
+}
+
+query query2 ($dogCommand: DogCommand!) {
+	dog {
+		... mergeIdenticalFieldsWithIdenticalValues
+	}
+}
+
+fragment mergeIdenticalFieldsWithIdenticalArgs on Dog {
+  doesKnowCommand(dogCommand: SIT)
+  doesKnowCommand(dogCommand: SIT)
+}
+
+fragment mergeIdenticalFieldsWithIdenticalValues on Dog {
+  doesKnowCommand(dogCommand: $dogCommand)
+  doesKnowCommand(dogCommand: $dogCommand)
+}

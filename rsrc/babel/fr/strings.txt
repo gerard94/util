@@ -1,0 +1,102 @@
+STRINGS
+
+AAlreadyDef	Identificateur déjà défini.
+AIncreasing	L'ordre doit être croissant.
+AUnknownIdent	Identificateur inconnu.
+AOneOnly	Un et un seul caractère.
+ANonTTwiceDef	Non-terminal défini deux fois.
+AUnknownTerm	Terminal inconnu.
+AWrong	Numéro incorrect.
+AUnknownAtt	Attribut inconnu.
+ANoAttrib	Les terminaux n'ont pas d'attributs.
+AMandatoryAtt	Attribut obligatoire pour un non-terminal.
+AUnknownNonT	Non-terminal inconnu.
+AHFuncTwiceDef	Fonction dure définie deux fois.
+ASFuncTwiceDef	Fonction douce définie deux fois.
+AUnknownFunc	Fonction inconnue.
+ANullFuncNumber	Numéro de fonction nul.
+AAttTwiceDef	Attribut défini deux fois.
+ATwoBig	Nombre trop grand.
+AUnknownErr	Erreur inconnue.
+
+AnError	*** ERREUR ! ***
+AnWarning	*** ATTENTION ! ***
+AnRemark	*** REMARQUE ! ***
+
+BNoCreate	Impossible de créer le fichier tables.
+BOk	OK.
+BRem	Remarques.
+BWarning	Attention.
+BError	Erreurs.
+BBabel	Babel :
+BNotFound	N'existe pas.
+BSee	Voir
+
+CForbidden	Caractère interdit ici.
+COpenedComment	Commentaire ouvert à la fin du texte.
+CNoComment	Fin de commentaire inattendu.
+Cor	ou
+Cexpected	attendu(e).
+Cread	lu
+
+ENothing	rien
+Eunnamed	sans nom
+Eused	utile
+Eunused	inutile
+EusedVal	valeur utilisée
+EunusedVal	valeur non utilisée
+Ecopy	fonction de copie
+Esoft	fonction douce
+Ehard	fonction dure
+
+EBCircImportWith	Importation circulaire avec ^0
+EBNoAxiom	Il n'y a pas d'axiome
+EBNotDefined	Non défini : ^0
+
+ILine	Ligne
+ICol	Colonne
+lPos	Position
+
+LEOF	fin de texte
+
+MCompile	Compiler
+MCompile_list	Compiler la liste
+MFind	Chercher une position...
+MInstall	Installer le convertisseur de tbl
+MTest	Tester une grammaire...
+MAllTest	Tester une grammaire sur tous fichiers...
+
+SNoRule	Le non-terminal ^0  n'est défini par aucune règle.
+SSyntAndHer	L'attribut ^0 du non-terminal ^1 est à la fois synthétisé et hérité.
+SNeverCalc	L'attribut ^0 du non-terminal ^1 n'est jamais calculé.
+SNeverUsedAtt	L'attribut ^0 du non-terminal ^1 n'est jamais utilisé.
+SNoCalc	Une occurrence de l'attribut ^0 ^1 du non-terminal ^2 n'est pas calculée dans la règle :
+SLocSynt	synthétisé local
+SGlobSynt	synthétisé global
+SLocHer	hérité local
+SGlobHer	hérité global
+SSeveralCalc	Une occurrence de l'attribut ^0 du non-terminal ^1 est calculée plusieurs fois dans la règle :
+SCyclicAtt	Le calcul des attributs est cyclique. En effet :
+SAttNonT	L'attribut ^0 du non-terminal ^1
+SDerives	dépend de l'attribut ^0 du non-terminal ^1
+Swhich	, lequel
+Sor	ou
+SHaveRead	Lorsqu'on a lu :
+SIfRead	si on lit :
+SMustRead	doit-on avoir lu :
+SMustUnderstand	doit-on avoir compris :
+SFirst	C'est la première solution qui est retenue.
+SNeverUsedNonT	Le non-terminal ^0 n'est jamais utilisé.
+SResumeAfter	Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué ^0, la compilation ne reprend qu'après la lecture de ^1
+SorAfter	, ou de ^0
+
+WBrowse	Parcourir...
+WDir	Répertoires :
+WFilesInError	Fichiers en erreur
+WFind	Chercher
+WFirstLevel	Premier niveau
+WGrammar	Grammaire :
+WReset	Mise à jour
+WRoot	Racine :
+WSndLevel	Second niveau
+WTest	Test

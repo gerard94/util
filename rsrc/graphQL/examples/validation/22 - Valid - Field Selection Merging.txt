@@ -1,0 +1,29 @@
+query query1 {
+	dog {
+		... safeDifferingFields
+	}
+}
+
+query safeDifferingArgs {
+	dog {
+		... safeDifferingArgs
+	}
+}
+
+fragment safeDifferingFields on Pet {
+  ... on Dog {
+    volume: barkVolume
+  }
+  ... on Cat {
+    volume: meowVolume
+  }
+}
+
+fragment safeDifferingArgs on Pet {
+  ... on Dog {
+    doesKnowCommand(dogCommand: SIT)
+  }
+  ... on Cat {
+    doesKnowCommand(catCommand: JUMP)
+  }
+}

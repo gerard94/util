@@ -1,0 +1,5 @@
+query listToNonNullList($booleanList: [Boolean]) {
+  arguments {
+    nonNullBooleanListField(nonNullBooleanListArg: $booleanList)
+  }
+}

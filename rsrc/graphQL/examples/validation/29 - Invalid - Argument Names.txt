@@ -1,0 +1,9 @@
+{
+	dog {
+		... invalidArgName
+	}
+}
+
+fragment invalidArgName on Dog {
+  isHousetrained(atOtherHomes: true) @include(unless: false)
+}

@@ -1,0 +1,9 @@
+{
+	__schema {
+		types {
+			name
+			description
+			kind
+		}
+	}
+}

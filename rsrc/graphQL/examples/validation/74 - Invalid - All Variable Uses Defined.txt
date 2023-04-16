@@ -1,0 +1,13 @@
+query variableIsNotDefinedUsedInNestedFragment {
+  dog {
+    ...outerHousetrainedFragment
+  }
+}
+
+fragment outerHousetrainedFragment on Dog {
+  ...isHousetrainedFragment
+}
+
+fragment isHousetrainedFragment on Dog {
+  isHousetrained(atOtherHomes: $atOtherHomes)
+}

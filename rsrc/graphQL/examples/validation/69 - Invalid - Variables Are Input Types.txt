@@ -1,0 +1,23 @@
+query takesCat($cat: Cat) {
+  dog {
+		likes(cat: $cat)
+  }
+}
+
+query takesDogBang($dog: Dog!) {
+  dog {
+		likes(cat: $cat)
+  }
+}
+
+query takesListOfPet($pets: [Pet]) {
+  dog {
+		likes(cat: $cat)
+  }
+}
+
+query takesCatOrDog($catOrDog: CatOrDog) {
+  dog {
+		likes(cat: $cat)
+  }
+}

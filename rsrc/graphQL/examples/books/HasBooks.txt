@@ -1,0 +1,10 @@
+query HasBooks {
+	hasBooks {
+		... on Author {
+			name
+		}
+		books {
+			title
+		}
+	}
+}

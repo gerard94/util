@@ -1,0 +1,55 @@
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _action, la compilation ne reprend qu'après la lecture de point-virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _affectation, la compilation ne reprend qu'après la lecture de point-virgule, ou de virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _axiome, la compilation ne reprend qu'après la lecture de point.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _commentaire, la compilation ne reprend qu'après la lecture de lexique.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _declaration, la compilation ne reprend qu'après la lecture de point-virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _defTok, la compilation ne reprend qu'après la lecture de point-virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _definition, la compilation ne reprend qu'après la lecture de point-virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _partieDefinition, la compilation ne reprend qu'après la lecture de commentaire, ou de lexique.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _partieSyntaxique, la compilation ne reprend qu'après la lecture de axiome.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _regle, la compilation ne reprend qu'après la lecture de point-virgule.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _terminaison, la compilation ne reprend qu'après la lecture de declaration.
+
+

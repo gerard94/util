@@ -1,0 +1,11 @@
+{
+	dog {
+		... dogFragment
+	}
+}
+
+fragment dogFragment on Dog {
+  ... on Dog {
+    barkVolume
+  }
+}

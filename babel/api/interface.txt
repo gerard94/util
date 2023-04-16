@@ -1,0 +1,46 @@
+package api
+
+const (
+	WithoutDisp	= iota
+
+	Remarks
+
+	Warnings
+
+	Errors
+)
+
+type (
+	Facer	interface {
+		String(s string)
+
+		Ln()
+
+		Map(index string, p ...string) string
+
+		BinInt(i int32)
+
+		Read() (ch rune, cLen int)
+
+		Pos() int
+
+		SetPos(pos int)
+	}
+
+	Face	struct {
+		Facer
+		// contains filtered or unexported fields
+	}
+)
+
+func (f *Face) Int(n int)
+
+func (se *semI) Map(index string) string
+
+func (f *Face) Error(p, l, c int, mes string)
+
+func (f *Face) CompComp() (name string, res int8)
+
+func (f *Face) OutComp()
+
+func NewFace(f Facer) *Face

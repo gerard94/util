@@ -1,0 +1,14 @@
+query Author {
+	author(name: "Card") {
+		name
+		book(title: "A") {
+			title
+			publisher {
+				name
+			}
+		}
+		books {
+			title
+		}
+  }
+}

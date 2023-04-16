@@ -1,0 +1,9 @@
+{
+	dog {
+		... interfaceFieldSelection
+	}
+}
+
+fragment interfaceFieldSelection on Pet {
+  name
+}

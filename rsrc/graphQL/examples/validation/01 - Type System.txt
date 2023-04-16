@@ -1,0 +1,95 @@
+type Query {
+  dog: Dog
+}
+
+enum DogCommand { SIT, DOWN, HEEL }
+
+type Dog implements Pet {
+  name: String!
+  nickname: String @deprecated
+  barkVolume: Int
+  doesKnowCommand(dogCommand: DogCommand!): Boolean!
+  isHousetrained(atOtherHomes: Boolean): Boolean!
+  owner: Human
+}
+
+interface Sentient {
+  name: String!
+}
+
+interface Pet {
+  name: String!
+}
+
+type Alien implements Sentient {
+  name: String!
+  homePlanet: String
+}
+
+type Human implements Sentient {
+  name: String!
+}
+
+enum CatCommand { JUMP }
+
+"A cat is not a dog."
+type Cat implements Pet {
+  name: String!
+  nickname: String
+  doesKnowCommand(catCommand: CatCommand!): Boolean!
+  meowVolume: Int
+}
+
+union CatOrDog = Cat | Dog
+union DogOrHuman = Dog | Human
+union HumanOrAlien = Human | Alien
+
+extend type Query {
+  human: Human
+  pet: Pet
+  catOrDog: CatOrDog
+}
+
+type Arguments {
+  multipleReqs(x: Int!, y: Int!): Int!
+  booleanArgField(booleanArg: Boolean): Boolean
+  floatArgField(floatArg: Float): Float
+  intArgField(intArg: Int): Int
+  nonNullBooleanArgField(nonNullBooleanArg: Boolean!): Boolean!
+  nonNullBooleanListField(nonNullBooleanListArg: [Boolean]!): Boolean!
+  booleanListArgField(booleanListArg: [Boolean]!): [Boolean]
+  optionalNonNullBooleanArgField(optionalBooleanArg: Boolean! = false): Boolean!
+  argumentsWithDefValues(l1: [Int] = 2147483647, l2: [Int] = [1, 2, 3], s: String = null): [Int]
+}
+
+input ComplexInput {
+  name: String
+  owner: String
+}
+
+input ArgumentInput {
+  field: Boolean!
+}
+
+extend type Query {
+  findDog(complex: ComplexInput): Dog
+  booleanList(booleanListArg: [Boolean!]): Boolean
+  field(arg: ArgumentInput):Boolean
+}
+
+extend type Query {
+  arguments: Arguments
+}
+
+extend type Dog {
+	likes (cat: ArgumentInput): Boolean
+}
+
+type Subscription {
+	newMessage: Message
+}
+
+type Message {
+	body: String
+	sender: String!
+}

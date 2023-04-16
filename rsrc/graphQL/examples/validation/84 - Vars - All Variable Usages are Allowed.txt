@@ -1,0 +1,8 @@
+{
+	"nonNullBooleanList":
+		[
+			true,
+			false,
+			true
+		]
+}

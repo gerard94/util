@@ -1,0 +1,6 @@
+mutation DeleteBooks ($ids: [IdInput!]!) {
+	deleteBooks(ids: $ids) {
+		id
+		title
+	}
+}

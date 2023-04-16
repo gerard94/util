@@ -1,0 +1,18 @@
+{
+	dog {
+		... sentientFragment
+		... humanOrAlienFragment
+	}
+}
+
+fragment sentientFragment on Sentient {
+  ... on Dog {
+    barkVolume
+  }
+}
+
+fragment humanOrAlienFragment on HumanOrAlien {
+  ... on Cat {
+    meowVolume
+  }
+}

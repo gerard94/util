@@ -1,0 +1,19 @@
+{
+	"book":
+		{
+			"title":
+				"Cathedral",
+			"authors":
+				[
+					{
+						"name":
+							"Orson Scott Card"
+					}
+				],
+			"publisher":
+				{
+					"name":
+						"Hachette"
+				}
+		}
+}

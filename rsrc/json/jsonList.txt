@@ -1,0 +1,10 @@
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _array, la compilation ne reprend qu'après la lecture de rBracket.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _object, la compilation ne reprend qu'après la lecture de rBrace.
+
+

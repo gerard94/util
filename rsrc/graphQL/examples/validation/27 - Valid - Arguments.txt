@@ -1,0 +1,14 @@
+{
+	dog {
+		... argOnRequiredArg
+		... argOnOptional
+	}
+}
+
+fragment argOnRequiredArg on Dog {
+  doesKnowCommand(dogCommand: SIT)
+}
+
+fragment argOnOptional on Dog {
+  isHousetrained(atOtherHomes: true) @include(if: true)
+}

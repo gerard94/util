@@ -1,0 +1,15 @@
+query queryWithUsedVar($atOtherHomes: Boolean) {
+  dog {
+    ...isHousetrainedFragment
+  }
+}
+
+query queryWithExtraVar($atOtherHomes: Boolean, $extra: Int) {
+  dog {
+    ...isHousetrainedFragment
+  }
+}
+
+fragment isHousetrainedFragment on Dog {
+  isHousetrained(atOtherHomes: $atOtherHomes)
+}

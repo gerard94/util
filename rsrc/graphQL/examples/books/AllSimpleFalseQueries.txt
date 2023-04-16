@@ -1,0 +1,200 @@
+query FalseAuthor {
+	author(name: "Card") {
+		name
+		book(title: "A") {
+			title
+			publisher
+		}
+		books {
+			title
+		}
+  }
+}
+
+query FalseAuthors {
+	authors {
+		name
+		books {
+			id
+			title {
+				name
+			}
+			publishDate
+			publisher {
+				name
+			}
+		}
+  }
+}
+
+query FalseAuthorsAndPublishersNames {
+	authorsOrPublishers {
+		... on Author {
+			name
+			titlesA: book(title: $A) {
+				title
+			}
+		}
+		... PublisherName
+	}
+}
+
+fragment PublisherName on Publisher {
+	name
+}
+
+query FalseBook {
+	book(title: "Bas") {
+		id
+		title
+		authors {
+			name
+		}
+		publisher {
+			name
+		}
+		publishDate {
+			value
+		}
+  }
+}
+
+query FalseBooks {
+	books {
+		id
+		title
+		publishDate
+		publisher {
+			name
+		}
+		authors {
+			name
+		}
+  }
+}
+
+query FalseHasBooks1 {
+	hasBooks {
+		... on Author {
+			name
+		}
+	}
+}
+
+query FalseHasBooks2 {
+	hasBooks {
+		... on Author {
+			name
+		}
+		books {
+			title
+		}
+	}
+}
+
+query FalseHumanNames {
+	humans {
+			name
+			id
+	}
+}
+
+query FalseIntrospection {
+	__schema {
+		queryType {
+			name
+		}
+		mutationType {
+			name
+		}
+		subscriptionType {
+			name
+		}
+		types {
+			name
+			kind
+			description
+			fields(includeDeprecated: true) {
+				name
+				description
+				args {
+					name
+					description
+					type {
+						name
+					}
+					defaultValue
+				}
+				type {
+					name
+				}
+				isDeprecated
+				deprecationReason
+			}
+			interfaces {
+				name
+			}
+			possibleTypes {
+				name
+			}
+			enumValues(includeDeprecated: true) {
+				name
+				description
+				isDeprecated
+				deprecationReason
+			}
+			inputFields {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+			ofType {
+				name
+			}
+		}
+		directives {
+			name
+			description
+			locations
+			args {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+		}
+	}
+}
+
+query FalsePublisher {
+	publisher(name: "S") {
+		name
+		books {
+			id
+			title
+			publishDate
+			authors {
+				names
+			}
+		}
+  }
+}
+
+query FalsePublishers {
+	publishers {
+		name
+		books {
+			id
+			title
+			publishDate
+			authors {
+				name
+			}
+		}
+  }
+}

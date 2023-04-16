@@ -1,0 +1,18 @@
+type Union1
+	implements inter
+
+enum enum
+
+input input
+
+type Union2
+
+type Query
+
+interface inter
+
+union Union = 
+	|Union1
+	|Union2
+
+union void

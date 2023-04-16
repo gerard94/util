@@ -1,0 +1,9 @@
+query {
+  dog {
+    ... skipFragment @skip(if: true)
+  }
+}
+
+fragment skipFragment on Dog {
+  name
+}

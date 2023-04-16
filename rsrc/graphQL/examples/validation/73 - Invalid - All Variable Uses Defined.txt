@@ -1,0 +1,9 @@
+query variableIsNotDefinedUsedInSingleFragment {
+  dog {
+    ...isHousetrainedFragment
+  }
+}
+
+fragment isHousetrainedFragment on Dog {
+  isHousetrained(atOtherHomes: $atOtherHomes)
+}

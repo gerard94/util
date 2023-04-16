@@ -1,0 +1,3 @@
+package api
+
+func (se *sem) Execution(numFct, nbPars int, params C.ObjectsList) (o *C.Object, a C.Anyptr, ok bool)

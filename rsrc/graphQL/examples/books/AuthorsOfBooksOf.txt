@@ -1,0 +1,11 @@
+query AuthorsOfBooksOf {
+	author(name: "Card") {
+		name
+		books {
+			title
+			authors {
+				name
+			}
+		}
+  }
+}

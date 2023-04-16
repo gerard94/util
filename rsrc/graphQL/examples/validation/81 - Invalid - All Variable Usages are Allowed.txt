@@ -1,0 +1,5 @@
+query intCannotGoIntoBoolean($intArg: Int) {
+  arguments {
+    booleanArgField(booleanArg: $intArg)
+  }
+}

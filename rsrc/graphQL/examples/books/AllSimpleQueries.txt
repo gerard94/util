@@ -1,0 +1,197 @@
+query Author {
+	author(name: "Card") {
+		name
+		book(title: "A") {
+			title
+			publisher {
+				name
+			}
+		}
+		books {
+			title
+		}
+  }
+}
+
+query Authors {
+	authors {
+		name
+		books {
+			id
+			title
+			publishDate
+			publisher {
+				name
+			}
+		}
+  }
+}
+
+query AuthorsAndPublishersNames {
+	authorsOrPublishers {
+		... on Author {
+			name
+			titlesA: book(title: "A") {
+				title
+			}
+		}
+		... PublisherName
+	}
+}
+
+fragment PublisherName on Publisher {
+	name
+}
+
+query Book {
+	book(title: "Bas") {
+		id
+		title
+		authors {
+			name
+		}
+		publisher {
+			name
+		}
+		publishDate
+  }
+}
+
+query Books {
+	books {
+		id
+		title
+		publishDate
+		publisher {
+			name
+		}
+		authors {
+			name
+		}
+  }
+}
+
+query HasBooks1 {
+	hasBooks {
+		... on Author {
+			name
+		}
+	}
+}
+
+query HasBooks2 {
+	hasBooks {
+		... on Author {
+			name
+		}
+		books {
+			title
+		}
+	}
+}
+
+query HumanNames {
+	humans {
+			name
+	}
+}
+
+query Introspection {
+	__schema {
+		queryType {
+			name
+		}
+		mutationType {
+			name
+		}
+		subscriptionType {
+			name
+		}
+		types {
+			name
+			kind
+			description
+			fields(includeDeprecated: true) {
+				name
+				description
+				args {
+					name
+					description
+					type {
+						name
+					}
+					defaultValue
+				}
+				type {
+					name
+				}
+				isDeprecated
+				deprecationReason
+			}
+			interfaces {
+				name
+			}
+			possibleTypes {
+				name
+			}
+			enumValues(includeDeprecated: true) {
+				name
+				description
+				isDeprecated
+				deprecationReason
+			}
+			inputFields {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+			ofType {
+				name
+			}
+		}
+		directives {
+			name
+			description
+			locations
+			args {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+		}
+	}
+}
+
+query Publisher {
+	publisher(name: "S") {
+		name
+		books {
+			id
+			title
+			publishDate
+			authors {
+				name
+			}
+		}
+  }
+}
+
+query Publishers {
+	publishers {
+		name
+		books {
+			id
+			title
+			publishDate
+			authors {
+				name
+			}
+		}
+  }
+}

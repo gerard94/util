@@ -1,0 +1,6 @@
+{
+	__type(name: "ArgumentInput") {
+		kind
+		name
+	}
+}

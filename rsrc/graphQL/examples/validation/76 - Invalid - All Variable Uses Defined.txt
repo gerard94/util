@@ -1,0 +1,15 @@
+query housetrainedQueryOne($atOtherHomes: Boolean) {
+  dog {
+    ...isHousetrainedFragment
+  }
+}
+
+query housetrainedQueryTwoNotDefined {
+  dog {
+    ...isHousetrainedFragment
+  }
+}
+
+fragment isHousetrainedFragment on Dog {
+  isHousetrained(atOtherHomes: $atOtherHomes)
+}

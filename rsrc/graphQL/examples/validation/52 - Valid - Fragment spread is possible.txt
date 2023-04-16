@@ -1,0 +1,15 @@
+{
+	dog {
+		... unionWithInterface
+	}
+}
+
+fragment unionWithInterface on Pet {
+  ...dogOrHumanFragment
+}
+
+fragment dogOrHumanFragment on DogOrHuman {
+  ... on Dog {
+    barkVolume
+  }
+}

@@ -1,0 +1,6 @@
+mutation DeleteBook {
+	deleteBook(id: 3) {
+		id
+		title
+	}
+}

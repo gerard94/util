@@ -1,0 +1,5 @@
+query @skip(if: true) {
+  dog {
+    name
+  }
+}

@@ -1,0 +1,5 @@
+{
+  findDog(complex: { name: "Fido" }) {
+    nickname
+  }
+}

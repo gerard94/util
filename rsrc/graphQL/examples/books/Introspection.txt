@@ -1,0 +1,71 @@
+query Introspection {
+	__schema {
+		queryType {
+			name
+		}
+		mutationType {
+			name
+		}
+		subscriptionType {
+			name
+		}
+		types {
+			name
+			kind
+			description
+			fields(includeDeprecated: true) {
+				name
+				description
+				args {
+					name
+					description
+					type {
+						name
+					}
+					defaultValue
+				}
+				type {
+					name
+				}
+				isDeprecated
+				deprecationReason
+			}
+			interfaces {
+				name
+			}
+			possibleTypes {
+				name
+			}
+			enumValues(includeDeprecated: true) {
+				name
+				description
+				isDeprecated
+				deprecationReason
+			}
+			inputFields {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+			ofType {
+				name
+			}
+		}
+		directives {
+			name
+			description
+			locations
+			args {
+				name
+				description
+				type {
+					name
+				}
+				defaultValue
+			}
+		}
+	}
+}

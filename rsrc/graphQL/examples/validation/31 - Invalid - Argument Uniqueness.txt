@@ -1,0 +1,9 @@
+{
+	arguments {
+		... duplicateArgs
+	}
+}
+
+fragment duplicateArgs on Arguments {
+  multipleReqs(x: 1, x: 2)
+}

@@ -1,0 +1,258 @@
+*** ATTENTION ! ***
+
+Le non-terminal _ExecutableDefinitions n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Le non-terminal _ExecutableDocument n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Le non-terminal _TypeSystemDefinitionOrExtensions n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Le non-terminal _TypeSystemDefinitions n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Le non-terminal _TypeSystemDocument n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Le non-terminal _TypeSystemExtensionDocument n'est jamais utilisé.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_Directives_constE = _Directives_const ... ;
+ou
+_SchemaExtension = extend schema _Directives_const ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_Directives_constE = _Directives_const ;
+
+ou doit-on avoir compris :
+
+_SchemaExtension = extend schema _Directives_const ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_Directives_constE = _Directives_const ... ;
+ou
+_EnumTypeExtension = extend enum _Name _Directives_const ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_Directives_constE = _Directives_const ;
+
+ou doit-on avoir compris :
+
+_EnumTypeExtension = extend enum _Name _Directives_const ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_Directives_constE = _Directives_const ... ;
+ou
+_InputObjectTypeExtension = extend input _Name _Directives_const ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_Directives_constE = _Directives_const ;
+
+ou doit-on avoir compris :
+
+_InputObjectTypeExtension = extend input _Name _Directives_const ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_ImplementsInterfacesE = _ImplementsInterfaces ... ;
+ou
+_InterfaceTypeExtension = extend interface _Name _ImplementsInterfaces ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_ImplementsInterfacesE = _ImplementsInterfaces ;
+
+ou doit-on avoir compris :
+
+_InterfaceTypeExtension = extend interface _Name _ImplementsInterfaces ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_ImplementsInterfacesE = _ImplementsInterfaces ... ;
+ou
+_ObjectTypeExtension = extend type _Name _ImplementsInterfaces ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_ImplementsInterfacesE = _ImplementsInterfaces ;
+
+ou doit-on avoir compris :
+
+_ObjectTypeExtension = extend type _Name _ImplementsInterfaces ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_EnumTypeDefinition = _DescriptionE enum _Name _Directives_constE ... _EnumValuesDefinitionE ;
+
+si on lit : leftbrace ;
+
+doit-on avoir lu :
+
+_EnumValuesDefinition = leftbrace ... _EnumValueDefinitionLP rightbrace ;
+
+ou doit-on avoir compris :
+
+_EnumValuesDefinitionE = ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_InputObjectTypeDefinition = _DescriptionE input _Name _Directives_constE ... _InputFieldsDefinitionE ;
+
+si on lit : leftbrace ;
+
+doit-on avoir lu :
+
+_InputFieldsDefinition = leftbrace ... _InputValueDefinitionLP rightbrace ;
+
+ou doit-on avoir compris :
+
+_InputFieldsDefinitionE = ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_Directives_constE = _Directives_const ... ;
+ou
+_InterfaceTypeExtension = extend interface _Name _ImplementsInterfacesE _Directives_const ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_Directives_constE = _Directives_const ;
+
+ou doit-on avoir compris :
+
+_InterfaceTypeExtension = extend interface _Name _ImplementsInterfacesE _Directives_const ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_Directives_constE = _Directives_const ... ;
+ou
+_ObjectTypeExtension = extend type _Name _ImplementsInterfacesE _Directives_const ... ;
+
+si on lit : leftbrace ;
+
+doit-on avoir compris :
+
+_Directives_constE = _Directives_const ;
+
+ou doit-on avoir compris :
+
+_ObjectTypeExtension = extend type _Name _ImplementsInterfacesE _Directives_const ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_InterfaceTypeDefinition = _DescriptionE interface _Name _ImplementsInterfacesE _Directives_constE ... _FieldsDefinitionE ;
+
+si on lit : leftbrace ;
+
+doit-on avoir lu :
+
+_FieldsDefinition = leftbrace ... _FieldDefinitionLP rightbrace ;
+
+ou doit-on avoir compris :
+
+_FieldsDefinitionE = ;
+
+C'est la première solution qui est retenue.
+
+
+*** ATTENTION ! ***
+
+Lorsqu'on a lu :
+
+_ObjectTypeDefinition = _DescriptionE type _Name _ImplementsInterfacesE _Directives_constE ... _FieldsDefinitionE ;
+
+si on lit : leftbrace ;
+
+doit-on avoir lu :
+
+_FieldsDefinition = leftbrace ... _FieldDefinitionLP rightbrace ;
+
+ou doit-on avoir compris :
+
+_FieldsDefinitionE = ;
+
+C'est la première solution qui est retenue.
+
+
+*** REMARQUE ! ***
+
+Si une erreur syntaxique se produit lors de la lecture du non-terminal marqué _Definition, la compilation ne reprend qu'après la lecture de fin de texte, ou de directive, ou de enum, ou de extend, ou de fragment, ou de input, ou de interface, ou de mutation, ou de query, ou de scalar, ou de schema, ou de subscription, ou de type, ou de union, ou de leftbrace, ou de StringValue.
+
+

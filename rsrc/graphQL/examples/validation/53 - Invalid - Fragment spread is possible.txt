@@ -1,0 +1,13 @@
+{
+	dog {
+		... nonIntersectingInterfaces
+	}
+}
+
+fragment nonIntersectingInterfaces on Pet {
+  ...sentientFragment
+}
+
+fragment sentientFragment on Sentient {
+  name
+}

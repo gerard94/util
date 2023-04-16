@@ -1,0 +1,13 @@
+query Book {
+	book(title: "Le noyé") {
+		id
+		title
+		authors {
+			name
+		}
+		publisher {
+			name
+		}
+		publishDate
+  }
+}

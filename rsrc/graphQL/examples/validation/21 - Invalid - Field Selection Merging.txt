@@ -1,0 +1,43 @@
+query query1 {
+	dog {
+		... conflictingArgsOnValues
+	}
+}
+
+query query2 ($dogCommand: DogCommand = DOWN) {
+	dog {
+		... conflictingArgsValueAndVar
+	}
+}
+
+query query3 ($varOne: DogCommand = DOWN, $varTwo: DogCommand = DOWN) {
+	dog {
+		... conflictingArgsWithVars
+	}
+}
+
+query query4 {
+	dog {
+		... differingArgs
+	}
+}
+
+fragment conflictingArgsOnValues on Dog {
+  doesKnowCommand(dogCommand: SIT)
+  doesKnowCommand(dogCommand: HEEL)
+}
+
+fragment conflictingArgsValueAndVar on Dog {
+  doesKnowCommand(dogCommand: SIT)
+  doesKnowCommand(dogCommand: $dogCommand)
+}
+
+fragment conflictingArgsWithVars on Dog {
+  doesKnowCommand(dogCommand: $varOne)
+  doesKnowCommand(dogCommand: $varTwo)
+}
+
+fragment differingArgs on Dog {
+  doesKnowCommand(dogCommand: SIT)
+  doesKnowCommand
+}

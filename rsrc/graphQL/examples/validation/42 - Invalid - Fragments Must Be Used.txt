@@ -1,0 +1,9 @@
+{
+  dog {
+    name
+  }
+}
+
+fragment nameFragment on Dog { # unused
+  name
+}

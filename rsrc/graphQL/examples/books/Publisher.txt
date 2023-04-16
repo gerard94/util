@@ -1,0 +1,13 @@
+query Publisher {
+	publisher(name: "S") {
+		name
+		books {
+			id
+			title
+			publishDate
+			authors {
+				name
+			}
+		}
+  }
+}

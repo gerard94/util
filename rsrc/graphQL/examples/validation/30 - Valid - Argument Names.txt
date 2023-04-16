@@ -1,0 +1,14 @@
+{
+	arguments {
+		... multipleArgs
+		... multipleArgsReverseOrder
+	}
+}
+
+fragment multipleArgs on Arguments {
+  multipleReqs(x: 1, y: 2)
+}
+
+fragment multipleArgsReverseOrder on Arguments {
+  multipleReqs(y: 2, x: 1)
+}

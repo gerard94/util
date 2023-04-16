@@ -1,0 +1,5 @@
+query HumanNames {
+	humans {
+			name
+	}
+}

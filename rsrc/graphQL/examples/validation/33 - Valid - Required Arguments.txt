@@ -1,0 +1,9 @@
+{
+	arguments {
+		... goodBooleanArgDefault
+	}
+}
+
+fragment goodBooleanArgDefault on Arguments {
+  booleanArgField
+}

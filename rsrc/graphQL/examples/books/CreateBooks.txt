@@ -1,0 +1,6 @@
+mutation CreateBooks ($books: [BookInput!]!){
+	createBooks (books: $books) {
+		title
+		id
+	}
+}

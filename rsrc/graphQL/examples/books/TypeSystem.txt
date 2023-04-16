@@ -1,0 +1,77 @@
+scalar IDn
+
+type Book {
+	id: IDn!
+	title: String!
+	publishDate: String
+	author (name: String!): [Author!]
+	authors: [Author!]!
+	publisher: Publisher!
+}
+
+interface Human {
+	name: String!
+}
+
+interface HasBooks {
+	books: [Book!]!
+}
+
+type Author implements Human & HasBooks {
+	name: String!
+	book (title: String!): [Book!]
+	books: [Book!]!
+}
+
+type Publisher implements Human & HasBooks {
+	name: String!
+	book(title: String!): [Book!]
+	books: [Book!]!
+}
+
+union AuthorOrPublisher =
+	Author | Publisher
+
+input AuthorInput {
+	name: String!
+}
+
+input PublisherInput {
+	name: String!
+}
+
+input BookInput {
+	title: String!
+	publishDate: String
+	authors: [AuthorInput!]!
+	publisher: PublisherInput!
+}
+
+input IdInput {
+	id: IDn!
+}
+
+type Query {
+	authors: [Author!]
+	author(name: String!): [Author!]
+	publishers: [Publisher!]
+	publisher(name: String!): [Publisher!]
+	books: [Book!]
+	book(title: String!): [Book!]
+	authorsOrPublishers: [AuthorOrPublisher!]
+	humans: [Human!]
+	hasBooks: [HasBooks!]
+}
+
+type Mutation {
+	createBook (book: BookInput!): Book!
+	createBooks (books: [BookInput!]!): [Book!]!
+	deleteBook (id: IDn!): Book!
+	deleteBooks (ids: [IdInput!]!): [Book!]!
+}
+
+type Subscription {
+	bookCreated: Book!
+	authorCreated: Author!
+	publisherCreated: Publisher!
+}

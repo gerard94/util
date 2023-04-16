@@ -1,0 +1,13 @@
+query AuthorsAndPublishersNames {
+	authorsOrPublishers {
+		... on Author {
+			name
+			titlesA: book(title: "A") {
+				title
+			}
+		}
+		... on Publisher {
+			name
+		}
+	}
+}

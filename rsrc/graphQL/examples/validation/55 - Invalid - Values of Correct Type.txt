@@ -1,0 +1,13 @@
+fragment stringIntoInt on Arguments {
+  intArgField(intArg: "123")
+}
+
+query badComplexValue {
+  findDog(complex: { name: 123 }) {
+    name
+  }
+  arguments {
+    ... stringIntoInt
+  }
+
+}

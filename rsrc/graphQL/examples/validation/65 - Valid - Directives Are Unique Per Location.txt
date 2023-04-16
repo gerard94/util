@@ -1,0 +1,8 @@
+query ($foo: Boolean = true, $bar: Boolean = false) {
+  dog @skip(if: $foo) {
+    name
+  }
+  dog @skip(if: $bar) {
+    nickname
+  }
+}

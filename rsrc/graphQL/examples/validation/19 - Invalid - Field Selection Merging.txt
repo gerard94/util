@@ -1,0 +1,10 @@
+{
+	dog {
+		... conflictingBecauseAlias
+	}
+}
+
+fragment conflictingBecauseAlias on Dog {
+  name: nickname
+  name
+}

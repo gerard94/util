@@ -1,0 +1,5 @@
+query goodComplexDefaultValue($search: ComplexInput!) {
+  findDog(complex: $search) {
+    name
+  }
+}

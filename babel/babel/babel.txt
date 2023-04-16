@@ -1,0 +1,21 @@
+package main
+
+type (
+	Facer struct {
+		// contains filtered or unexported fields
+	}
+)
+
+func (f *Facer) Ln()
+
+func (f *Facer) String(s string)
+
+func (f *Facer) BinInt(i int32)
+
+func (f *Facer) Read() (ch rune, cLen int)
+
+func (f *Facer) Pos() int
+
+func (f *Facer) SetPos(pos int)
+
+func (f *Facer) Map(index string, p ...string) string

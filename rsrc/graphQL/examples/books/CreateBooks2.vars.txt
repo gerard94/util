@@ -1,0 +1,23 @@
+{
+	"books":
+		[
+			{
+				"title":
+					"La bande mouchetée",
+				"authors":
+					[
+						{
+							"name":
+								"Conan Doyle, Arthur"
+						}
+					],
+				"publishDate":
+					"2009-06-17 17:31:06",
+				"publisher":
+					{
+						"name":
+							"www.Fictionwise.com"
+					}
+			}
+		]
+}
