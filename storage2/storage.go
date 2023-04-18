@@ -16,7 +16,7 @@ package storage
 
 import (
 	"unsafe"
-	M	"util/misc"
+	M	"git.duniter.org/gerard94/util/misc"
 	/*
 	"fmt"
 	*/

@@ -22,7 +22,7 @@ import (
 
 )
 
-func inSrc () string {
+func inSrc () (root, src string) {
 	d, err := os.Getwd(); M.Assert(err == nil, err, 100)
 	for ; d != "." && d != "/" && d != ".."; d = F.Dir(d) {
 		f, err := os.Open(d); M.Assert(err == nil, err, d, 101)
@@ -30,26 +30,29 @@ func inSrc () string {
 		list, err := f.Readdirnames(0); M.Assert(err == nil, err, 102)
 		for _, fi := range list {
 			if fi == "go.mod" {
-				for d = F.Dir(d); F.Base(d) != "src" && d != "." && d != "/" && d != ".."; d = F.Dir(d) {
+				dd := d
+				for dd = F.Dir(dd); F.Base(dd) != "src" && dd != "." && dd != "/" && dd != ".."; dd = F.Dir(dd) {
 				}
-				M.Assert(F.Base(d) == "src", d, 103)
-				return d
+				if F.Base(dd) == "src" {
+					return d, dd
+				}
+				return d, ""
 			}
 		}
 	}
-	return ""
+	return "", ""
 }
 
 func findModsRec (d *os.File, root string, l *[]string) {
-	list, err := d.Readdirnames(0); M.Assert(err == nil, err, 104)
+	list, err := d.Readdirnames(0); M.Assert(err == nil, err, 103)
 	for _, n := range list {
 		r := F.Join(root, n)
 		if n == "go.mod" {
 			*l = append(*l, F.Dir(r))
 		} else {
-			dd, err := os.Open(r);  M.Assert(err == nil, err, r, 105)
+			dd, err := os.Open(r);  M.Assert(err == nil, err, r, 104)
 			defer dd.Close()
-			fi, err := dd.Stat(); M.Assert(err == nil, err, 106)
+			fi, err := dd.Stat(); M.Assert(err == nil, err, 105)
 			if fi.IsDir() {
 				findModsRec(dd, r, l)
 			}
@@ -59,7 +62,7 @@ func findModsRec (d *os.File, root string, l *[]string) {
 
 func findMods (root string) []string {
 	l := make([]string, 0)
-	d, err := os.Open(root);  M.Assert(err == nil, err, root, 108)
+	d, err := os.Open(root);  M.Assert(err == nil, err, root, 106)
 	defer d.Close()
 	findModsRec(d, root, &l)
 	return l
@@ -74,22 +77,28 @@ func splitFirstDir (path string) (string, string) {
 	return first, rest
 }
 
+// Let 'path' = "origin/rest/...". If the current directory is in a module whose root directory is "<absolute path>/root", FindDir returns "<absolute path>/root/rsrc/rest/...". But, if this module is a descendant of a directory named 'src' and if several modules are contained in 'src' and if one of these modules has root == origin, then FindDir returns "<absolute path>/origin/rsrc/rest". If the current directory "<current absolute path>" is not in a module, FindDir returns "<current absolute path>/rsrc/origin/rest"
 func FindDir (path string) string {
 	var r string
-	root := inSrc()
+	root, src := inSrc()
 	if root != "" {
 		mod, rest := splitFirstDir(path)
-		list := findMods(root)
-		for _, d := range list {
-			if F.Base(d) == mod {
-				r = F.Join(d, "rsrc", rest)
+		if src != "" {
+			list := findMods(src)
+			for _, d := range list {
+				if F.Base(d) == mod {
+					r = F.Join(d, "rsrc", rest)
+				}
 			}
+			if  r == "" {
+				r = F.Join(root, "rsrc", rest)
+			}
+		} else {
+			r = F.Join(root, "rsrc", rest)
 		}
-		M.Assert(r != "", "Unknown module", 109)
 	} else {
-		root, err := os.Getwd(); M.Assert(err == nil, err, 110)
+		root, err := os.Getwd(); M.Assert(err == nil, err, 107)
 		r = F.Join(root, "rsrc", path)
 	}
-	err := os.MkdirAll(r, 0777); M.Assert(err == nil, err, r, 111)
 	return r
 }

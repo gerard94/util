@@ -15,7 +15,7 @@ package storage
 /* This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed. */
 
 import (
-	M	"util/misc"
+	M	"git.duniter.org/gerard94/util/misc"
 		"unsafe"
 	/*
 	"fmt"
