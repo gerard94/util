@@ -7,11 +7,13 @@ import (
 
 )
 
-func Test0 (t *testing.T) {
-	fmt.Println("Version =", version)
+func TestVersion (t *testing.T) {
+	fmt.Println("Version =", Version())
 }
 
 func Test1 (t *testing.T) {
+	fmt.Println()
+	
 	fmt.Println("MinInt8 =", MinInt8)
 	fmt.Println("MaxInt8 =", MaxInt8)
 	fmt.Println("MinInt16 =", MinInt16)

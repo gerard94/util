@@ -31,9 +31,9 @@ type (
 
 )
 
-//Results of comparison.
 const (
 	
+	//Results of comparison.
 	Lt = Comp(-1) //less than
 	Eq = Comp(0) //equal
 	Gt = Comp(+1) //greater than
@@ -90,7 +90,7 @@ func (t *Tree) Empty () {
 	t.root = &e
 } //Empty
 
-// New creates a new tree.
+// New creates a new empty tree.
 func New () *Tree {
 	t := &Tree{}
 	t.Empty()
@@ -1071,7 +1071,7 @@ func doSplit (t1 *Tree, after int, p *Elem, t bool, t2 *Tree) (e1, e2 *Elem, tag
 	return
 } //doSplit
 
-// Splits the tree 't1' after the element of rank 'after'; the result is returned in 't1' and 't2'.
+// 'Split' splits the tree 't1' after the element of rank 'after'; the result is returned in 't1' and 't2'.
 func (t1 *Tree) Split (after int) (t2 *Tree) {
 	M.Assert(t1 != nil, "Nil Tree", 20)
 	M.Assert(t1.root != nil, "Invalid Tree", 21)

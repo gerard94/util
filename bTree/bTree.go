@@ -22,15 +22,18 @@ package bTree
 
 import (
 
-	A "git.duniter.org/gerard94/util/avl"
-	M "git.duniter.org/gerard94/util/misc"
-//		"time"
+	A	"git.duniter.org/gerard94/util/avl"
+	M	"git.duniter.org/gerard94/util/misc"
+		//"time"
+		/*
+		"fmt"
+		*/
 
 )
 	
 const (
 	
-//	backgroundUpdtDurationStr = "1s"
+	//backgroundUpdtDurationStr = "1s"
 	
 	// Minimal number of allocated pages.
 	minPageNb = 256
@@ -87,13 +90,13 @@ type (
 		// Set the reading position of the file to pos; the first position is 0.
 		PosReader (pos FilePos)
 		
-		// Read an array of n bytes from the file at reading position.
+		// Read a slice of n bytes from the file at reading position.
 		Read (n int) Bytes
 		
 		// Set the writing position of the file to pos; the first position is 0.
 		PosWriter (pos FilePos)
 		
-		// Write the array a to the file at writing position.
+		// Write the slice b to the file at writing position.
 		Write (b Bytes)
 		
 		// Return the length of the file.
@@ -165,14 +168,14 @@ type (
 	// Interface for managers of index keys.
 	KeyManagerer interface {
 		
-		// Comparison method. s1 and s2 are the keys to be compared. The result can be lt (s1 < s2), eq (s1 = s2) or gt (s1 > s2). KeyManagerer.CompP must induce a total order on the set of keys.
+		// Comparison method. s1 and s2 are the keys to be compared. The result can be Lt (s1 < s2), Eq (s1 = s2) or Gt (s1 > s2). KeyManagerer.CompP must induce a total order on the set of keys.
 		CompP (s1, s2 Data) Comp
 		
 		// Create a prefix of a key. On input key1 and key2 are two keys, with key1 < key2. On output, key2 may be modified, but cannot be enlarged, so that it becomes a prefix of its previous value. A prefix Pref(key1, key2) of  the key key2 in relation to the key key1 is defined by:
-		//	1) Pref(key1, key2) is a key, which can be compared to other keys by the mean of the method KeyManager.CompP;
+		//	1) Pref(key1, key2) is a key, which can be compared to other keys by the mean of the method KeyManagerer.CompP;
 		//	2) Pref(key1, key2) is the shortest key with key1 < Pref(key1, key2) <= key2;
 		//	3) key1 may have a null length and, in this case, must be considered less than any other key.
-		// Prefixes are useful if keys are long or if their lengths vary much. In this case, if KeyManager.PrefP is instantiated, database is shorter and searches are faster.
+		// Prefixes are useful if keys are long or if their lengths vary much. In this case, if KeyManagerer.PrefP is instantiated, database is shorter and searches are faster.
 		PrefP (key1 Data, key2 *Data)
 	
 	}
@@ -495,7 +498,7 @@ func (man *stringKeyManager) CompP (key1, key2 Data) Comp {
 		return Gt
 	}
 	return Eq
-}
+} //CompP
 
 type (
 	
@@ -507,29 +510,29 @@ type (
 // Create a prefix of the String key2, in relation with key1 and the comparison function compare; see PrefP.
 func StringPrefP (key1, key2 *String, compare StringComparer) *String {
 	M.Assert(key1 != nil && key2 != nil, 20)
-	M.Assert(compare(key1, key2) == Lt, 21)
+	M.Assert(key2.C == "" || compare(key1, key2) == Lt, 21)
 	l2 := len(key2.C)
 	key := new(String); key.C = ""
 	for l := 0; l < l2 && !(compare(key1, key) == Lt && compare(key, key2) <= Eq); l++ {
 		key.C += string(key2.C[l])
 	}
 	return key
-}
+} //StringPrefP
 
 // Calculate the shortest prefix of a String, in the proper sense.
 func (man *stringKeyManager) PrefP (key1 Data, key2 *Data) {
 	*key2 = StringPrefP(key1.(*String), (*key2).(*String), man.CompP)
-}
+} //PrefP
 
 // Return the length (number of bytes) of base.
 func (base *Database) End () FilePos {
 	return base.end
-}
+} //End
 
 // Return the number of fixed places in base.
 func (base *Database) PlaceNb () int {
 	return base.placeNb
-}
+} //PlaceNb
 
 // Initalize a reader from the input stream a at the position pos in a.
 func (r *Reader) initReader (ref *File, a Bytes, pos int) {
@@ -537,17 +540,17 @@ func (r *Reader) initReader (ref *File, a Bytes, pos int) {
 	r.s = a
 	r.pos = pos
 	r.len = len(a)
-}
+} //initReader
 
 // Return the length of the input stream owned by r, in bytes.
 func (r *Reader) Len () int {
 	return r.len
-}
+} //Len
 
 // Return the position of r in its input stream, in bytes.
 func (r *Reader) Pos () int {
 	return r.pos
-}
+} //Pos
 
 // Read a byte from the input stream.
 func (r *Reader) InByte () byte {
@@ -555,12 +558,12 @@ func (r *Reader) InByte () byte {
 	c := r.s[r.pos]
 	r.pos++
 	return c
-}
+} //InByte
 
 // Read a int8 from the input stream.
 func (r *Reader) InInt8 () int8 {
 	return int8(r.InByte())
-}
+} //InInt8
 
 // Read an array of bytes from the input stream.
 func (r *Reader) InBytes (len int) Bytes {
@@ -571,7 +574,7 @@ func (r *Reader) InBytes (len int) Bytes {
 		r.pos++
 	}
 	return bb
-}
+} //InBytes
 
 // Read a bool from the input stream.
 func (r *Reader) InBool () bool {
@@ -579,7 +582,7 @@ func (r *Reader) InBool () bool {
 	b := r.s[r.pos] != 0
 	r.pos++
 	return b
-}
+} //InBool
 
 // Read a string length from the input stream; preserves the position in the stream.
 func (r *Reader) InStringLen () int {
@@ -593,7 +596,7 @@ func (r *Reader) InStringLen () int {
 	}
 	M.Assert(pos < r.len, 20)
 	return n
-}
+} //InStringLen
 
 // Read a string from the input stream.
 func (r *Reader) InString () string {
@@ -605,7 +608,7 @@ func (r *Reader) InString () string {
 	}
 	r.pos++
 	return string(bb)
-}
+} //InString
 
 // Read an uint16 from the input stream.
 func (r *Reader) InUint16 () uint16 {
@@ -616,12 +619,12 @@ func (r *Reader) InUint16 () uint16 {
 	}
 	r.pos += SIS
 	return n
-}
+} //InUint16
 
 // Read an int16 from the input stream.
 func (r *Reader) InInt16 () int16 {
 	return int16(r.InUint16())
-}
+} //InInt16
 
 // Read an uint32 from the input stream.
 func (r *Reader) InUint32 () uint32 {
@@ -632,12 +635,12 @@ func (r *Reader) InUint32 () uint32 {
 	}
 	r.pos += INS
 	return n
-}
+} //InUint32
 
 // Read an int32 from the input stream.
 func (r *Reader) InInt32 () int32 {
 	return int32(r.InUint32())
-}
+} //InInt32
 
 // Read an uint64 from the input stream.
 func (r *Reader) InUint64 () uint64 {
@@ -648,33 +651,33 @@ func (r *Reader) InUint64 () uint64 {
 	}
 	r.pos += LIS
 	return n
-}
+} //InUint64
 
 // Read a FilePos from the input stream.
 func (r *Reader) InFilePos () FilePos {
 	return FilePos(r.InUint64())
-}
+} //InFilePos
 
 // Read an int64 from the input stream.
 func (r *Reader) InInt64 () int64 {
 	return int64(r.InUint64())
-}
+} //InInt64
 
 // Read a float32 from the input stream. Use File.BytesToFloat32.
 func (r *Reader) InFloat32 () float32 {
 	return r.ref.BytesToFloat32(r.s, &r.pos)
-}
+} //InFloat32
 
 // Read a float64 from the input stream. Use File.BytesToFloat64.
 func (r *Reader) InFloat64 () float64 {
 	return r.ref.BytesToFloat64(r.s, &r.pos)
-}
+} //InFloat64
 
 // Initialize a writer
 func (w *Writer) initWriter (ref *File) {
 	w.ref = ref
 	w.s = A.New()
-}
+} //initWriter
 
 // Return the content of w.s (output stream of the writer) as an array of bytes
 func (w *Writer) write () Bytes {
@@ -688,24 +691,24 @@ func (w *Writer) write () Bytes {
 		e = w.s.Next(e)
 	}
 	return a
-}
+} //write
 
 // Write a byte to the output stream.
 func (w *Writer) OutByte (c byte) {
 	w.s.Append(c)
-}
+} //OutByte
 
 // Write an int8 to the output stream.
 func (w *Writer) OutInt8 (c int8) {
 	w.OutByte(byte(c))
-}
+} //OutInt8
 
 // Write a Bytes to the output stream.
 func (w *Writer) OutBytes (b Bytes) {
 	for _, c := range b {
 		w.OutByte(c)
 	}
-}
+} //OutBytes
 
 // Write a bool to the output stream.
 func (w *Writer) OutBool (b bool) {
@@ -714,13 +717,13 @@ func (w *Writer) OutBool (b bool) {
 	} else {
 		w.OutByte(0)
 	}
-}
+} //OutBool
 
 // Write a string to the output stream.
 func (w *Writer) OutString (c string) {
 	w.OutBytes(Bytes(c))
 	w.OutByte(0);
-}
+} //OutString
 
 // Write a uint16 to the output stream.
 func (w *Writer) OutUint16 (n uint16) {
@@ -728,12 +731,12 @@ func (w *Writer) OutUint16 (n uint16) {
 		w.OutByte(byte(n % valOct))
 		n /= valOct
 	}
-}
+} //OutUint16
 
 // Write a int16 to the output stream.
 func (w *Writer) OutInt16 (n int16) {
 	w.OutUint16(uint16(n))
-}
+} //OutInt16
 
 // Write a uint32 to the output stream.
 func (w *Writer) OutUint32 (n uint32) {
@@ -741,12 +744,12 @@ func (w *Writer) OutUint32 (n uint32) {
 		w.OutByte(byte(n % valOct))
 		n /= valOct
 	}
-}
+} //OutUint32
 
 // Write a int32 to the output stream.
 func (w *Writer) OutInt32 (n int32) {
 	w.OutUint32(uint32(n))
-}
+} //OutInt32
 
 // Write a uint64 to the output stream.
 func (w *Writer) OutUint64 (n uint64) {
@@ -754,27 +757,27 @@ func (w *Writer) OutUint64 (n uint64) {
 		w.OutByte(byte(n % valOct))
 		n /= valOct
 	}
-}
+} //OutUint64
 
 // Write a FilePos to the output stream.
 func (w *Writer) OutFilePos (n FilePos) {
 	w.OutUint64(uint64(n))
-}
+} //OutFilePos
 
 // Write a int64 to the output stream.
 func (w *Writer) OutInt64 (n int64) {
 	w.OutUint64(uint64(n))
-}
+} //OutInt64
 
-// Write a float32 to the output stream. Use File.Float32ToBytes. *)
+// Write a float32 to the output stream. Use File.Float32ToBytes.
 func (w *Writer) OutFloat32 (r float32) {
 	w.OutBytes(w.ref.Float32ToBytes(r))
-}
+} //OutFloat32
 
-// Write a float64 to the output stream. Use File.Float64ToBytes. *)
+// Write a float64 to the output stream. Use File.Float64ToBytes.
 func (w *Writer) OutFloat64 (r float64) {
 	w.OutBytes(w.ref.Float64ToBytes(r))
-}
+} //OutFloat64
 
 // Read an integer on disk at the current reading position
 func (ref *File) readInt () int {
@@ -782,7 +785,7 @@ func (ref *File) readInt () int {
 	var r Reader
 	r.initReader(ref, a, 0)
 	return int(r.InInt32())
-}
+} //readInt
 
 // Read a uint64 on disk at the current reading position
 func (ref *File) readInt64 () int64 {
@@ -790,7 +793,7 @@ func (ref *File) readInt64 () int64 {
 	var r Reader
 	r.initReader(ref, a, 0)
 	return r.InInt64()
-}
+} //readInt64
 
 // Read a FilePos on disk at the current reading position
 func (ref *File) readFilePos () FilePos {
@@ -798,7 +801,7 @@ func (ref *File) readFilePos () FilePos {
 	var r Reader
 	r.initReader(ref, a, 0)
 	return r.InFilePos()
-}
+} //readFilePos
 
 // Read a bool on disk at the current reading position
 func (ref *File) readBool () bool {
@@ -806,7 +809,7 @@ func (ref *File) readBool () bool {
 	var r Reader
 	r.initReader(ref, a, 0)
 	return a[0] != 0
-}
+} //readBool
 
 // Write an integer to disk at the current writing position
 func (ref *File) writeInt32 (n int32) {
@@ -814,7 +817,7 @@ func (ref *File) writeInt32 (n int32) {
 	w.initWriter(ref)
 	w.OutInt32(int32(n))
 	ref.Write(w.write())
-}
+} //writeInt32
 
 // Write a uint64 to disk at the current writing position
 func (ref *File) writeInt64 (n int64) {
@@ -822,7 +825,7 @@ func (ref *File) writeInt64 (n int64) {
 	w.initWriter(ref)
 	w.OutInt64(n)
 	ref.Write(w.write())
-}
+} //writeInt64
 
 // Write a FilePos to disk at the current writing position
 func (ref *File) writeFilePos (n FilePos) {
@@ -830,7 +833,7 @@ func (ref *File) writeFilePos (n FilePos) {
 	w.initWriter(ref)
 	w.OutFilePos(n)
 	ref.Write(w.write())
-}
+} //writeFilePos
 
 // Write a bool to disk at the current writing position
 func (ref *File) writeBool (b bool) {
@@ -841,23 +844,23 @@ func (ref *File) writeBool (b bool) {
 		a[0] = 0
 	}
 	ref.Write(a)
-}
+} //writeBool
 
 // Create a String.
 func (f StringFac) New (size int) Data {
 	M.Assert(size >= 0, 20)
 	return new(String)
-}
+} //New
 
 // Write s.C with the help of the writer w. The length of the production is 2 * (len(s.C)+ 1).
 func (s *String) Write (w *Writer) {
 	w.OutString(s.C)
-}
+} //Write
 
-// Read s.c with the help of the reader r.
+// Read s.C with the help of the reader r.
 func (s *String) Read (r *Reader) {
 	s.C = r.InString()
-}
+} //Read
 
 // Create and return a new manager of the data created by fac in the database base.
 func (base *Database) CreateDataMan (fac DataFac) *DataMan {
@@ -866,12 +869,12 @@ func (base *Database) CreateDataMan (fac DataFac) *DataMan {
 	man.base = base
 	man.fac = fac
 	return man
-}
+} //CreateDataMan
 
 func (f fClusterHeadFac) New (sz int) Data {
 	M.Assert(sz == fClusterHeadSize, 101)
 	return new(fClusterHead)
-}
+} //New
 
 func (h *fClusterHead) Write (w *Writer) {
 	w.OutBool(true)
@@ -881,7 +884,7 @@ func (h *fClusterHead) Write (w *Writer) {
 	w.OutFilePos(h.right)
 	w.OutInt8(h.lDist)
 	w.OutInt8(h.rDist)
-}
+} //Write
 
 func (h *fClusterHead) Read (r *Reader) {
 	M.Assert(r.InBool(), 102)
@@ -891,62 +894,62 @@ func (h *fClusterHead) Read (r *Reader) {
 	h.right = r.InFilePos()
 	h.lDist = r.InInt8()
 	h.rDist = r.InInt8()
-}
+} //Read
 
 func (f fClusterTailFac) New (sz int) Data {
 	M.Assert(sz == fClusterTailSize, 103)
 	return new(fClusterTail)
-}
+} //New
 
 func (t *fClusterTail) Write (w *Writer) {
 	w.OutInt64(t.size)
 	w.OutBool(true)
-}
+} //Write
 
 func (t *fClusterTail) Read  (r *Reader) {
 	t.size = r.InInt64()
 	M.Assert(r.InBool(), 104)
-}
+} //Read
 
 func (f rClusterHeadFac) New (sz int) Data {
 	M.Assert(sz == rClusterHeadSize, 105)
 	return new(rClusterHead)
-}
+} //New
 
 func (h *rClusterHead) Write (w *Writer) {
 	w.OutBool(false)
 	w.OutInt64(h.size)
-}
+} //Write
 
 func (h *rClusterHead) Read (r *Reader) {
 	M.Assert(!r.InBool(), 106)
 	h.size = r.InInt64()
-}
+} //Read
 
 func (f rClusterTailFac) New (sz int) Data {
 	M.Assert(sz == rClusterTailSize, 107)
 	return new(rClusterTail)
-}
+} //New
 
 func (t *rClusterTail) Write (w *Writer) {
 	w.OutBool(false);
-}
+} //Write
 
 func (t *rClusterTail) Read (r *Reader) {
 	M.Assert(!r.InBool(), 108)
-}
+} //Read
 
 // Read n bytes from position ptr on disk
 func (base *Database) readBase (ptr FilePos, n int) Bytes {
 	base.ref.PosReader(ptr)
 	return base.ref.Read(n)
-}
+} //readBase
 
 // Write a to disk at position ptr
 func (base *Database) writeBase (ptr FilePos, a Bytes) {
 	base.ref.PosWriter(ptr)
 	base.ref.Write(a)
-}
+} //writeBase
 
 // Ordering relation of pages in database buffer; order is given by the position of pages on disk
 func (p1 *pageT) Compare (p2 A.Comparer) Comp {
@@ -958,7 +961,7 @@ func (p1 *pageT) Compare (p2 A.Comparer) Comp {
 		return A.Gt
 	}
 	return A.Eq
-}
+} //Compare
 
 // Look for the buffer page p at position pos; return true if found
 func (base *Database) findPage (pos FilePos) (p *pageT, ok bool) {
@@ -967,7 +970,7 @@ func (base *Database) findPage (pos FilePos) (p *pageT, ok bool) {
 		p = e.Val().(*pageT)
 	}
 	return
-}
+} //findPage
 
 type (
 	
@@ -1031,7 +1034,7 @@ func (base *Database) pageManager (stopPM, detPIn, updtPIn, updt1PIn, verIn <-ch
 			wriPOut <- true
 		}
 	}
-}
+} //pageManager
 
 // Promote p at the first place in the buffer ring
 func (base *Database) promotePage (p *pageT){
@@ -1042,14 +1045,14 @@ func (base *Database) promotePage (p *pageT){
 	base.pagesRing.nextP.prevP = p
 	base.pagesRing.nextP = p
 	p.locked++ // Keep it in RAM
-}
+} //promotePage
 
 func adjustPos (d Data, size int, pos *FilePos) {
 	switch d.(type) {
 	case *fClusterTail, *rClusterTail:
 		*pos -= FilePos(size) - BOS
 	}
-}
+} //adjustPos
 
 func (base *Database) updatePage (p *pageT) {
 	p.dirty = false
@@ -1060,8 +1063,9 @@ func (base *Database) updatePage (p *pageT) {
 	n := p.posP
 	adjustPos(p.pageP, p.sizeP, &n)
 	base.writeBase(n, aP)
-}
+} //updatePage
 
+/*
 // Create an empty buffer page in ram for position pos and size pageSize on disk; if buffer is already full, remove the least promoted page
 func (base *Database) createPage (pageSize int, pos FilePos) *pageT {
 	var p *pageT
@@ -1092,20 +1096,59 @@ func (base *Database) createPage (pageSize int, pos FilePos) *pageT {
 	_, b, _ := base.pages.SearchIns(p)
 	M.Assert(!b, 110)
 	return p
-}
+} //createPage
+*/
+
+// Create an empty buffer page in ram for position pos and size pageSize on disk; if buffer is already full, remove the least promoted page
+func (base *Database) createPage (pageSize int, pos FilePos) *pageT {
+	e, found, _ := base.pages.SearchIns(&pageT{posP: pos})
+	p := e.Val().(*pageT)
+	if found {
+		M.Assert(p.locked == 0, "locked =", p.locked, 100)
+		base.promotePage(p)
+		if p.dirty { // Page not up to date on disk: write it
+			base.updatePage(p)
+		}
+	} else {
+		// Insert 'p' at the beginning of the ring
+		p.nextP = base.pagesRing.nextP
+		p.prevP = base.pagesRing
+		base.pagesRing.nextP.prevP = p
+		base.pagesRing.nextP = p
+		p.dirty = false
+		p.locked = 1 // Keep it in RAM
+		if base.pages.NumberOfElems() > base.pageNb { // Too many pages: delete an old one, the oldest
+			q := base.pagesRing.prevP
+			for q != p && q.locked > 0 { //Don't erase a locked page
+				q = q.prevP
+			}
+			M.Assert(q != p, 101) //Otherwise, not enough pages, increase base.pageNb!!!
+			if q.dirty { // Page not up to date on disk: write it
+				base.updatePage(q)
+			}
+			// Remove 'q' from the ring and from 'pages'
+			q.prevP.nextP = q.nextP
+			q.nextP.prevP = q.prevP
+			b := base.pages.Delete(q); M.Assert(b, 102)
+		}
+	}
+	p.pageP = nil
+	p.sizeP = pageSize
+	return p
+} //createPage
 
 // Create a new buffer page in ram for position pos and size pageSize (on disk); create a new empty Data in it with the help of fac and return it
 func (base *Database) newPageA (pageSize int, fac DataFac, pos FilePos) Data {
 	p := base.createPage(pageSize, pos)
 	p.pageP = fac.New(pageSize)
 	return p.pageP
-}
+} //newPageA
 
 // Create a new buffer page in ram for position pos and size pageSize (on disk); create a new empty Data in it with the help of fac and return it
 func (base *Database) newPage (pageSize int, fac DataFac, pos FilePos) Data {
 	base.newPIn <- &fpIntData{pageSize: pageSize, fac: fac, pos: pos}
 	return <-base.newPOut
-}
+} //newPage
 
 // Erase buffer page with position pos by removing it from base.pagesRing and base.pages
 func (base *Database) erasePageA (pos FilePos) {
@@ -1115,13 +1158,13 @@ func (base *Database) erasePageA (pos FilePos) {
 		b := base.pages.Delete(p)
 		M.Assert(b, 111)
 	}
-}
+} //erasePageA
 
 // Erase buffer page with position pos by removing it from base.pagesRing and base.pages
 func (base *Database) erasePage (pos FilePos) {
 	base.eraPIn <- pos
 	<- base.eraPOut
-}
+} //erasePage
 
 // Find the buffer page at position pos, or create it empty with size pageSize if not found; promote and return it
 func (base *Database) selectSysPage (pos FilePos, pageSize int) *pageT {
@@ -1132,7 +1175,7 @@ func (base *Database) selectSysPage (pos FilePos, pageSize int) *pageT {
 		p = base.createPage(pageSize, pos)
 	}
 	return p
-}
+} //selectSysPage
 
 // Find, or create and fill if not found, the buffer page at position pos; creation, if any, is made with size pageSize and the help of fac
 func (base *Database) readSysPageA (pos FilePos, pageSize int, fac DataFac) Data {
@@ -1146,26 +1189,26 @@ func (base *Database) readSysPageA (pos FilePos, pageSize int, fac DataFac) Data
 		p.pageP.Read(&r)
 	}
 	return p.pageP
-}
+} //readSysPageA
 
 // Find, or create and fill if not found, the buffer page at position pos; creation, if any, is made with size pageSize and the help of fac
 func (base *Database) readSysPage (pos FilePos, pageSize int, fac DataFac) Data {
 	base.readSPIn <- &fpIntData{pos: pos, pageSize: pageSize, fac: fac}
 	return <-base.readSPOut
-}
+} //readSysPage
 
 // Mark the buffer page at position pos for writing on disk; the page must exist and not be empty
 func (base *Database) writePageA (pos FilePos) {
 	p, ok := base.findPage(pos)
 	M.Assert(ok && (p.pageP != nil), 100)
 	p.dirty = true
-}
+} //writePageA
 
 // Mark the buffer page at position pos for writing on disk; the page must exist and not be empty
 func (base *Database) writePage (pos FilePos) {
 	base.wriPIn <- pos
 	<-base.wriPOut
-}
+} //writePage
 
 // Release a locked page when it is no more in use
 func (base *Database) releaseA (pos FilePos) {
@@ -1175,13 +1218,13 @@ func (base *Database) releaseA (pos FilePos) {
 		M.Assert(p.locked > 0, 101)
 		p.locked--
 	}
-}
+} //releaseA
 
 // Release a locked page when it is no more in use
 func (base *Database) release (pos FilePos) {
 	base.relIn <- pos
 	<-base.relOut
-}
+} //release
 
 // Write all buffer pages marked for writing on disk
 func (base *Database) updatePagesA () {
@@ -1193,13 +1236,13 @@ func (base *Database) updatePagesA () {
 			}
 		}
 	base.pages.WalkThrough(do)
-}
+} //updatePagesA
 
 // Write all buffer pages marked for writing on disk
 func (base *Database) updatePages () {
 	base.updtPIn <- true
 	<-base.updtPOut
-}
+} //updatePages
 
 func (base *Database) updateOnePageA () {
 	p := base.pagesRing.prevP
@@ -1209,7 +1252,7 @@ func (base *Database) updateOnePageA () {
 	if p != base.pagesRing {
 		base.updatePage(p)
 	}
-}
+} //updateOnePageA
 //
 //func (base *Database) backgroundUpdate () {
 //	for {
@@ -1217,7 +1260,7 @@ func (base *Database) updateOnePageA () {
 //		base.updt1PIn <- true
 //		<- base.updt1POut
 //	}
-//}
+//} //backgroundUpdate
 
 // Create a new file of name nF, with the help of fac, and a database inside this file, with placeNb fixed places. Don't open this database. Fixed places are locations where can be recorded integers, i.e. data pointers.
 func (fac *Factory) CreateBase (nF string, placeNb int) bool {
@@ -1237,7 +1280,7 @@ func (fac *Factory) CreateBase (nF string, placeNb int) bool {
 	ref.writeBool(false) // Tail of  a reserved cluster
 	ref.Close()
 	return true
-}
+} //CreateBase
 
 // Open and return, with the help of fac, the database created in the file of name nF. pageNb is the maximal number of allocated buffer pages. Return nil if the file does not exit or can't be opened.
 func (fac *Factory) OpenBase (nF string, pageNb int) *Database {
@@ -1303,7 +1346,7 @@ func (fac *Factory) OpenBase (nF string, pageNb int) *Database {
 //	go base.backgroundUpdate()
 	
 	return base
-}
+} //OpenBase
 
 // Verify, with the help of fac, if the file nF exists and if it contains a database; return true in this case; the base must be closed.
 func (fac *Factory) TestBase (nF string) bool {
@@ -1319,7 +1362,7 @@ func (fac *Factory) TestBase (nF string) bool {
 	}
 	ref.Close()
 	return ok
-}
+} //TestBase
 
 // Close, with the help of fac, the database created in the file of name nF, if it exists and is open. It is a rescue func. Use it only in case of an accidentally kept open database. Normally, use Database.CloseBase.
 func (fac *Factory) CloseBase (nF string) {
@@ -1346,7 +1389,7 @@ func (fac *Factory) CloseBase (nF string) {
 		ref.writeBool(false)
 		ref.Close()
 	}
-}
+} //CloseBase
 
 // Update the database base on disk.
 func (base *Database) UpdateBase () {
@@ -1355,7 +1398,7 @@ func (base *Database) UpdateBase () {
 	base.ref.PosWriter(INS)
 	base.ref.writeFilePos(base.root)
 	base.ref.Flush()
-}
+} //UpdateBase
 
 func (base *Database) verifyNotLockedA () {
 	p := base.pagesRing.nextP
@@ -1363,22 +1406,22 @@ func (base *Database) verifyNotLockedA () {
 		M.Assert(p.locked == 0, 101) // Otherwise, the page was never released
 		p = p.nextP
 	}
-}
+} //verifyNotLockedA
 
 func (base *Database) verifyNotLocked () {
 	base.verIn <- true
 	<-base.verOut
-}
+} //verifyNotLocked
 
 func (base *Database) detachPagesA () {
 	base.pages = nil
 	base.pagesRing = nil
-}
+} //detachPagesA
 
 func (base *Database) detachPages () {
 	base.detPIn <- true
 	<-base.detPOut
-}
+} //detachPages
 
 // Close the database base.
 func (base *Database) CloseBase () {
@@ -1403,15 +1446,15 @@ func (base *Database) CloseBase () {
 	base.ref = nil
 	base.detachPages()
 	base.stopPM <- true
-}
+} //CloseBase
 
 // Read on disk, and return, the size of the page at position ptr
 func (base *Database) readBaseLength (ptr FilePos) int {
 	base.ref.PosReader(ptr - LIS) // Point to the last field (size) of the preceding rClusterHead
 	return int(base.ref.readInt64())
-}
+} //readBaseLength
 
-// Join the two leftist trees of roots pointed by root1 and root2, and returns a pointer to the new root in root. base is the database. dad is a pointer to the father of root. cont1 and cont2 are the roots of the two trees. On return, dist contains the field rDist of the new root plus one. *)
+// Join the two leftist trees of roots pointed by root1 and root2, and returns a pointer to the new root in root. base is the database. dad is a pointer to the father of root. cont1 and cont2 are the roots of the two trees. On return, dist contains the field rDist of the new root plus one.
 func (base *Database) merge (dad, root1, root2 FilePos, cont1, cont2 *fClusterHead) (root FilePos, dist int8) {
 	if root1 == BNil {
 		root = root2
@@ -1473,9 +1516,9 @@ func (base *Database) merge (dad, root1, root2 FilePos, cont1, cont2 *fClusterHe
 		}
 	}
 	return
-}
+} //merge
 
-// Insert the free header cluster cont, pointed by ptr, in the leftist tree of root pointed by root. If the root is modified, root points to the new one. base is the database. If the size of the greatest cluster is modified, max returns the new value. *)
+// Insert the free header cluster cont, pointed by ptr, in the leftist tree of root pointed by root. If the root is modified, root points to the new one. base is the database. If the size of the greatest cluster is modified, max returns the new value.
 func (base *Database) baseInsertFree (ptr FilePos, cont *fClusterHead, root *FilePos, max *int64) {
 	cont.father = BNil
 	cont.left = BNil
@@ -1497,9 +1540,9 @@ func (base *Database) baseInsertFree (ptr FilePos, cont *fClusterHead, root *Fil
 		*max = base.readSysPage(*root, fClusterHeadSize, fCH).(*fClusterHead).size
 		base.release(*root)
 	}
-}
+} //baseInsertFree
 
-// Remove the free header cluster cont, pointed by ptr, from the leftist tree of root root. If the root is modified, root points to the new one. base is the database. If the size of the greatest cluster is modified, max returns the new value. *)
+// Remove the free header cluster cont, pointed by ptr, from the leftist tree of root root. If the root is modified, root points to the new one. base is the database. If the size of the greatest cluster is modified, max returns the new value.
 func (base *Database) baseRemoveFree (ptr FilePos, cont *fClusterHead, root *FilePos, max *int64) {
 	var lCont, rCont *fClusterHead
 	if cont.left != BNil {
@@ -1552,7 +1595,7 @@ func (base *Database) baseRemoveFree (ptr FilePos, cont *fClusterHead, root *Fil
 			oldDist = cont.rDist
 		}
 	}
-}
+} //baseRemoveFree
 
 // Reserve a page of size size on disk in base and return its position
 func (base *Database) allocateBase (size int) FilePos {
@@ -1591,7 +1634,7 @@ func (base *Database) allocateBase (size int) FilePos {
 	base.release(ptr + szPos - 1)
 	ptr += rClusterHeadSize
 	return ptr
-}
+} //allocateBase
 
 // Return whether the header at position pos is free or not; return in cont this header
 func (base *Database) freeHeadA (pos FilePos) (cont Data, free bool) {
@@ -1607,14 +1650,14 @@ func (base *Database) freeHeadA (pos FilePos) (cont Data, free bool) {
 		cont = base.readSysPageA(pos, fClusterHeadSize, &fCH)
 	}
 	return
-}
+} //freeHeadA
 
 // Return whether the header at position pos is free or not; return in cont this header
 func (base *Database) freeHead (pos FilePos) (cont Data, free bool) {
 	base.freHIn <- pos
 	db := <-base.freHOut
 	return db.cont, db.free
-}
+} //freeHead
 
 // Return whether the tail at position pos is free or not; return in cont this tail
 func (base *Database) freeTailA (pos FilePos) (cont Data, free bool) {
@@ -1630,14 +1673,14 @@ func (base *Database) freeTailA (pos FilePos) (cont Data, free bool) {
 		cont = base.readSysPageA(pos, fClusterTailSize, &fCT)
 	}
 	return
-}
+} //freeTailA
 
 // Return whether the tail at position pos is free or not; return in cont this tail
 func (base *Database) freeTail (pos FilePos) (cont Data, free bool) {
 	base.freTIn <- pos
 	db := <-base.freTOut
 	return db.cont, db.free
-}
+} //freeTail
 
 // Return the reserved cluster at position ptr to the pool of free clusters on disk; aggregate adjacent free clusters into bigger ones; truncate the base file if possible
 func (base *Database) deleteBase (ptr FilePos) {
@@ -1702,7 +1745,7 @@ func (base *Database) deleteBase (ptr FilePos) {
 		base.baseInsertFree(ptr, contHF, &base.root, &base.max)
 		base.release(ptr)
 	}
-}
+} //deleteBase
 
 // Read and return the content of the fixed place place of the database base. The first place has number 0.
 func (base *Database) ReadPlace (place int) int64 {
@@ -1710,7 +1753,7 @@ func (base *Database) ReadPlace (place int) int64 {
 	M.Assert(place >= 0 && place < base.placeNb, 21)
 	base.ref.PosReader(FilePos((place + 1) * LIS + 3 * INS))
 	return base.ref.readInt64()
-}
+} //ReadPlace
 
 // Write val in the fixed place place of the database base. The first place has number 0.
 func (base *Database) WritePlace (place int, val int64) {
@@ -1718,19 +1761,19 @@ func (base *Database) WritePlace (place int, val int64) {
 	M.Assert(place >= 0 && place < base.placeNb, 21)
 	base.ref.PosWriter(FilePos((place + 1) * LIS + 3 * INS))
 	base.ref.writeInt64(val)
-}
+} //WritePlace
 
 // Reserve a page of size pageSize on disk and create a new buffer page for it, with the help of fac; return the empty data, and the page position
 func (base *Database) newDiskPage (pageSize int, fac DataFac, pos *FilePos) Data{
 	*pos = base.allocateBase(pageSize)
 	return base.newPage(pageSize, fac, *pos)
-}
+} //newDiskPage
 
 // Erase the page on disk at position pos and its buffer page
 func (base *Database) eraseDiskPage (pos FilePos) {
 	base.erasePage(pos)
 	base.deleteBase(pos)
-}
+} //eraseDiskPage
 
 // For an already existing normal page (not cluster head nor tail page) on disk at position pos, promote and possibly create its buffer page and return it
 func (base *Database) selectPage (pos FilePos) *pageT {
@@ -1741,20 +1784,20 @@ func (base *Database) selectPage (pos FilePos) *pageT {
 		p = base.createPage(base.readBaseLength(pos), pos)
 	}
 	return p
-}
+} //selectPage
 
 // Find in buffer the size of the normal page (not cluster head nor tail page) at position pos and return it
 func (base *Database) readPageLengthA (pos FilePos) int {
 	size := base.selectPage(pos).sizeP
 	base.releaseA(pos)
 	return size
-}
+} //readPageLengthA
 
 // Find in buffer the size of the normal page (not cluster head nor tail page) at position pos and return it
 func (base *Database) readPageLength (pos FilePos) int {
 	base.readPLIn <- pos
 	return <-base.readPLOut
-}
+} //readPageLength
 
 // Find, or create and fill if not found, the normal buffer page (not cluster head nor tail page) at position pos; creation of data, if any, is made with the help of fac
 func (base *Database) readPageA (pos FilePos, fac DataFac) Data {
@@ -1767,15 +1810,15 @@ func (base *Database) readPageA (pos FilePos, fac DataFac) Data {
 		p.pageP.Read(&r)
 	}
 	return p.pageP
-}
+} //readPageA
 
 // Find, or create and fill if not found, the normal buffer page (not cluster head nor tail page) at position pos; creation of data, if any, is made with the help of fac
 func (base *Database) readPage (pos FilePos, fac DataFac) Data {
 	base.readPIn <- &fpData{pos: pos, fac: fac}
 	return <-base.readPOut
-}
+} //readPage
 
-// Read user data m in the database of m at position ptr. *)
+// Read user data m in the database of m at position ptr.
 func (m *DataMan) ReadData (ptr FilePos) Data {
 	M.Assert(m.base.ref != nil, 20)
 	M.Assert(ptr != BNil, 21)
@@ -1789,9 +1832,9 @@ func (m *DataMan) ReadData (ptr FilePos) Data {
 	pa := m.fac.New(len(a))
 	pa.Read(&r)
 	return pa
-}
+} //ReadData
 
-// Consider using AllocateData or, better, WriteAllocateData instead. Allocate a cluster of size size, managed by m, in the database of m, and return its position. *)
+// Consider using AllocateData or, better, WriteAllocateData instead. Allocate a cluster of size size, managed by m, in the database of m, and return its position.
 func (m *DataMan) AllocateSize (size int) FilePos {
 	M.Assert(m.base.ref != nil, 20)
 	M.Assert(size > 0, 21)
@@ -1799,7 +1842,7 @@ func (m *DataMan) AllocateSize (size int) FilePos {
 	_ = m.base.newDiskPage(size, m.fac, &pos)
 	m.base.release(pos)
 	return pos
-}
+} //AllocateSize
 
 // Consider using WriteAllocateData instead. Allocate a cluster for data, managed by m, in the database of m, and return its position. Warning: AllocateData calls data.Write to find the size of data, be sure the value of data can be written and has its correct size.
 func (m *DataMan) AllocateData (data Data) FilePos {
@@ -1809,7 +1852,7 @@ func (m *DataMan) AllocateData (data Data) FilePos {
 	w.initWriter(m.base.ref)
 	data.Write(&w)
 	return m.AllocateSize(w.s.NumberOfElems())
-}
+} //AllocateData
 
 // Allocate a cluster for data, managed by m, in the database of m, and write data into it; return the position of the allocated cluster.
 func (m *DataMan) WriteAllocateData (data Data) FilePos {
@@ -1827,7 +1870,7 @@ func (m *DataMan) WriteAllocateData (data Data) FilePos {
 	m.base.writePage(ptr)
 	m.base.release(ptr)
 	return ptr
-}
+} //WriteAllocateData
 
 // Write data, managed by m, at the position ptr in the database of m.
 func (m *DataMan) WriteData (ptr FilePos, data Data) {
@@ -1842,14 +1885,14 @@ func (m *DataMan) WriteData (ptr FilePos, data Data) {
 	m.base.readPage(ptr, m.fac).Read(&r)
 	m.base.writePage(ptr)
 	m.base.release(ptr)
-}
+} //WriteData
 
 // Erase data managed by m at position ptr in the database of m.
 func (m *DataMan) EraseData (ptr FilePos) {
 	M.Assert(m.base.ref != nil, 20)
 	M.Assert(ptr != BNil, 21)
 	m.base.eraseDiskPage(ptr)
-}
+} //EraseData
 
 func (pa *pageI) Write (w *Writer) {
 	w.OutFilePos(pa.keys)
@@ -1858,7 +1901,7 @@ func (pa *pageI) Write (w *Writer) {
 		w.OutFilePos(pa.elems[i].ptr)
 		w.OutInt16(pa.elems[i].endK)
 	}
-}
+} //Write
 
 func (pa *pageI) Read (r *Reader) {
 	pa.keys = r.InFilePos()
@@ -1867,41 +1910,41 @@ func (pa *pageI) Read (r *Reader) {
 		pa.elems[i].ptr = r.InFilePos()
 		pa.elems[i].endK = r.InInt16()
 	}
-}
+} //Read
 
 func (f pageIFac) New (sz int) Data {
 	M.Assert(sz <= pageIS, 114)
 	return new(pageI)
-}
+} //New
 
 func (c *keyCont) Write (w *Writer) {
 	w.OutBytes(Bytes(c.c))
-}
+} //Write
 
 func (c *keyCont) Read (r *Reader) {
 	c.c = keyT(r.InBytes(len(c.c)))
-}
+} //Read
 
 func (f keyFac) New (sz int) Data {
 	M.Assert(sz >= 0, 115)
 	pa := new(keyCont)
 	pa.c = make(keyT, sz)
 	return pa
-}
+} //New
 
 func (c *stringI) Write (w *Writer) {
 	w.OutFilePos(c.next)
 	w.OutFilePos(c.prev)
 	w.OutFilePos(c.dataPos)
 	w.OutBytes(Bytes(c.key))
-}
+} //Write
 
 func (c *stringI) Read (r *Reader) {
 	c.next = r.InFilePos()
 	c.prev = r.InFilePos()
 	c.dataPos = r.InFilePos()
 	c.key = keyT(r.InBytes(len(c.key)))
-}
+} //Read
 
 func (f stringIFac) New (sz int) Data {
 	M.Assert(sz >= stringIS, 20)
@@ -1909,7 +1952,7 @@ func (f stringIFac) New (sz int) Data {
 	sz -= stringIS
 	pa.key = make(keyT, sz)
 	return pa
-}
+} //New
 
 func (i *info) Write (w *Writer) {
 	w.OutInt32(guard1)
@@ -1919,7 +1962,7 @@ func (i *info) Write (w *Writer) {
 	w.OutInt32(int32(i.iH))
 	w.OutInt32(int32(i.iSize))
 	w.OutInt32(guard2)
-}
+} //Write
 
 func (i *info) Read (r *Reader) {
 	M.Assert(r.InInt32() == guard1, 116)
@@ -1929,24 +1972,24 @@ func (i *info) Read (r *Reader) {
 	i.iH = int(r.InInt32())
 	i.iSize = int(r.InInt32())
 	M.Assert(r.InInt32() == guard2, 116)
-}
+} //Read
 
 func (f infoFac) New (sz int) Data {
-	M.Assert(sz == infoS, 117, sz);
+	M.Assert(sz == infoS, "sz =", sz, 117);
 	return new(info)
-}
+} //New
 
 // Make a KeyManager out of a KeyManagerer.
 func MakeKM (k KeyManagerer) *KeyManager {
 	km := new(KeyManager)
 	km.KeyManagerer = k
 	return km
-}
+} //MakeKM
 
 // Create a KeyManeger for String(s).
 func StringKeyManager () *KeyManager {
 	return MakeKM (new(stringKeyManager))
-}
+} //StringKeyManager
 
 // Create a new index in the database base and return its reference, but do not open it. keySize is the size of keys. If keys have a fixed size, put this size in keySize. If the size of keys does not vary much, put the greatest size in keySize. If the greatest size of keys is unknown, or if this size vary much, or if you want to use prefixes, put zero in keySize: you'll have to fix the size of each key later.
 func (base *Database) CreateIndex (keySize int) FilePos {
@@ -1967,7 +2010,7 @@ func (base *Database) CreateIndex (keySize int) FilePos {
 	base.writePage(pos)
 	base.release(pos)
 	return pos
-}
+} //CreateIndex
 
 // Open and return an index created with the reference ref by Database.CreateIndex in the database base. man is the key manager of the index and f is the factory of its keys. The current position of the index is reset.
 func (base *Database) OpenIndex (ref FilePos, man *KeyManager, f DataFac) *Index {
@@ -1993,7 +2036,7 @@ func (base *Database) OpenIndex (ref FilePos, man *KeyManager, f DataFac) *Index
 		ind.keysSize = (2 * minEl + 1) * ind.keySize
 	}
 	return ind
-}
+} //OpenIndex
 
 func (base *Database) indDel (pos FilePos, h int) {
 	if h > 0 {
@@ -2004,9 +2047,9 @@ func (base *Database) indDel (pos FilePos, h int) {
 		}
 	}
 	base.eraseDiskPage(pos)
-}
+} //indDel
 
-// Delete the index at position ref in the database base; this index must have been closed.
+// Delete the index at position ref in the database base.
 func (base *Database) DeleteIndex (ref FilePos) {
 	M.Assert(base.ref != nil, 20)
 	M.Assert(ref != BNil, 22)
@@ -2018,27 +2061,27 @@ func (base *Database) DeleteIndex (ref FilePos) {
 	}
 	base.writeBase(ref, a) // Erase the two "guards"
 	base.eraseDiskPage(ref)
-}
+} //DeleteIndex
 
 // Return the height of 'ind'
 func (ind *Index) Height () int {
 	return ind.height
-}
+} //Height
 
-// Create a new Reader for ind. A Reader keeps a position in an Index and can update this position or read values there.
+// Create a new Reader for ind. A Reader keeps a position in an Index and can update this position or read values there. Just after being created, its position is reseted.
 func (ind *Index) NewReader () *IndexReader {
 	return &IndexReader{ind: ind, posI: ind.stringI}
-}
+} //NewReader
 
 // Duplicate ir.
 func (ir *IndexReader) Clone () *IndexReader {
 	return &IndexReader{ind: ir.ind, posI: ir.posI}
-}
+} //Clone
 
-// Return the Writer of ind. A Writer keeps a position in an Index and can update this position or read/write values there.
+// Return the Writer of ind. A Writer keeps a position in an Index and can update this position or read/write values there. Just after the opening of an index, the position of its writer is reseted.
 func (ind *Index) Writer () *IndexWriter {
 	return ind.writer
-}
+} //Writer
 
 // Calculate the prefix of c2 relative to c1, with the help of man.PrefP, and return it as a Key in p; l is the length of p (in bytes); ref is used for real <-> bytes translations
 func (man *KeyManager) prefix (ref *File, c1, c2 Data) (p keyT, l int) {
@@ -2049,7 +2092,7 @@ func (man *KeyManager) prefix (ref *File, c1, c2 Data) (p keyT, l int) {
 	p = keyT(w.write())
 	l = len(p)
 	return
-}
+} //prefix
 
 // Update the root of ind's btree on disk
 func (ind *Index) updateRoot () {
@@ -2059,7 +2102,7 @@ func (ind *Index) updateRoot () {
 	p.iSize = ind.size
 	ind.baseI.writePage(ind.refI)
 	ind.baseI.release(ind.refI)
-}
+} //updateRoot
 
 // Change the allocation of p.keys when its content is increased by extra and becomes greater than its size 
 func (ind *Index) adjustKeysSize (p *pageI, extra int) {
@@ -2082,7 +2125,7 @@ func (ind *Index) adjustKeysSize (p *pageI, extra int) {
 		ind.baseI.eraseDiskPage(p.keys)
 		p.keys = nKeys
 	}
-}
+} //adjustKeysSize
 
 // Transfer nb successive elements from pa1 to pa2, starting at rank src in pa1 and at rank dst in pa2
 func (ind *Index) transInter (pa1, pa2 *pageI, src, dst, nb int) {
@@ -2122,7 +2165,7 @@ func (ind *Index) transInter (pa1, pa2 *pageI, src, dst, nb int) {
 	}
 	pa2.elNb += int8(nb)
 	pa1.elNb -= int8(nb)
-}
+} //transInter
 
 // Add, in the page pa of  the index ind, an element of rank dst corresponding to the key c of length lC and pointing to the page of position el (pageI inside index or stringI at its bottom)
 func (ind *Index) transIn (pa *pageI, el FilePos, c keyT, lC, dst int) {
@@ -2143,7 +2186,7 @@ func (ind *Index) transIn (pa *pageI, el FilePos, c keyT, lC, dst int) {
 	pa.elems[dst].ptr = el
 	pa.elems[dst].endK = pa.elems[dst - 1].endK + int16(lC)
 	pa.elNb++
-}
+} //transIn
 
 // Substract, in the page pa of  the index ind, an element of rank src corresponding to the key c of length lC and pointing to the page of position el (pageI inside index or stringI at its bottom)
 func (ind *Index) transOut (pa *pageI, src int) (el FilePos, c keyT, lC int) {
@@ -2165,12 +2208,12 @@ func (ind *Index) transOut (pa *pageI, src int) (el FilePos, c keyT, lC int) {
 	}
 	pa.elNb--
 	return
-}
+} //transOut
 
 // Return the Index of ir.
 func (ir *IndexReader) Ind () *Index {
 	return ir.ind
-}
+} //Ind
 
 // Search in the page of address p the key key (keyA in Bytes form); father is the address of the father of p, fatherNum is the rank of p in father, h is the height of p; at exit, if inc (tree has grown), el is the new link to insert (pageI inside index or stringI at its bottom), c is the new key (or prefix) to insert and lC is its length
 func (iw *IndexWriter) searchIns (key Data, keyA keyT, p, father FilePos, fatherNum, h int) (found, inc bool, el FilePos, lC int, c keyT) {
@@ -2367,7 +2410,7 @@ func (iw *IndexWriter) searchIns (key Data, keyA keyT, p, father FilePos, father
 		ind.baseI.release(p)
 	}
 	return
-}
+} //searchIns
 
 // Seek in the index of iw the key key and insert it if it is not there already. The result indicates if the key was found. Fix the current position of iw on the key found or inserted.
 func (iw *IndexWriter) SearchIns (key Data) bool {
@@ -2398,7 +2441,7 @@ func (iw *IndexWriter) SearchIns (key Data) bool {
 		ind.updateRoot()
 	}
 	return found
-}
+} //SearchIns
 
 // Seek in the index of ir the key key. The result indicates if the key was found. Fix the current position of ir on the found key or on the key which is immediately after the sought key in the event of unfruitful search.
 func (ir *IndexReader) Search (key Data) bool {
@@ -2446,7 +2489,7 @@ func (ir *IndexReader) Search (key Data) bool {
 	}
 	ind.baseI.release(p)
 	return comp == Eq
-}
+} //Search
 
 // The number of elements in the page pointed by elems[num].ptr (in the page pointed by p) has become less than minEl; Fix fixes this problem
 func (ind *Index) fix (p FilePos, num int, dec *bool) {
@@ -2509,7 +2552,7 @@ func (ind *Index) fix (p FilePos, num int, dec *bool) {
 	ind.baseI.release(q2)
 	ind.baseI.writePage(p)
 	ind.baseI.release(p)
-}
+} //fix
 
 // Erase the element of the last key at level 1 in the subtree pointed by q, and put its key in the page pointed by p at position rgt; h is the current level
 func (ind *Index) del (p, q FilePos, h, rgt int, dec *bool) {
@@ -2530,9 +2573,9 @@ func (ind *Index) del (p, q FilePos, h, rgt int, dec *bool) {
 		}
 	}
 	ind.baseI.release(q)
-}
+} //del
 
-// Erase key in the subtree pointed by p; father is the father of p, fatherNum is the rank of p in father and h is the height of the subtree *)
+// Erase key in the subtree pointed by p; father is the father of p, fatherNum is the rank of p in father and h is the height of the subtree
 func (iw *IndexWriter) era (key Data, p, father FilePos, fatherNum, h int, dec, minus1, found *bool, followP *FilePos, followNum *int) {
 	
 	ind := iw.ind
@@ -2667,7 +2710,7 @@ func (iw *IndexWriter) era (key Data, p, father FilePos, fatherNum, h int, dec, 
 		}
 		ind.baseI.release(p)
 	}
-}
+} //era
 
 // Erase from the index of iw the key key. If key does not belong to the index, ind.Erase does nothing and returns false, otherwise it returns true. If the current position of iw was on the erased key, it is reset.
 func (iw *IndexWriter) Erase (key Data) bool {
@@ -2692,31 +2735,31 @@ func (iw *IndexWriter) Erase (key Data) bool {
 		ind.updateRoot()
 	}
 	return found
-}
+} //Erase
 
 // Test the emptiness of ind
 func (ind *Index) IsEmpty () bool {
 	M.Assert(ind.baseI != nil, 20)
 	return ind.size == 0
-}
+} //IsEmpty
 
 // Return the number of different keys in ind
 func (ind *Index) NumberOfKeys () int {
 	M.Assert(ind.baseI != nil, 20)
 	return ind.size
-}
+} //NumberOfKeys
 
 // Reset the current position of ir. After this action, ir.PosSet() returns false.
 func (ir *IndexReader) ResetPos () {
 	ind := ir.Ind()
 	ir.posI = ind.stringI
-}
+} //ResetPos
 
 // Test if ir is positioned on a key (return true) or if its current position is reset (false returned).
 func (ir *IndexReader) PosSet () bool {
 	ind := ir.ind
 	return ir.posI != ind.stringI
-}
+} //PosSet
 
 // Position ir on the next key. If the current position is reset, ir is positioned on the first key. If ir is positioned on the last key, its current position becomes reset.
 func (ir *IndexReader) Next () {
@@ -2724,7 +2767,7 @@ func (ir *IndexReader) Next () {
 	s := ind.baseI.readPage(ir.posI, sif).(*stringI)
 	ind.baseI.release(ir.posI)
 	ir.posI = s.next
-}
+} //Next
 
 // Position ir on the previous key. If the current position is reset, ir is positioned on the last key. If ir is positioned on the first key, its current position becomes reset.
 func (ir *IndexReader) Previous () {
@@ -2732,7 +2775,7 @@ func (ir *IndexReader) Previous () {
 	s := ind.baseI.readPage(ir.posI, sif).(*stringI)
 	ind.baseI.release(ir.posI)
 	ir.posI = s.prev
-}
+} //Previous
 
 // Return the value of the key in the current position of ir, or nil if the current position of ir is reset.
 func (ir *IndexReader) CurrentKey () Data {
@@ -2747,7 +2790,7 @@ func (ir *IndexReader) CurrentKey () Data {
 	ind.baseI.release(ir.posI)
 	data.Read(&r)
 	return data
-}
+} //CurrentKey
 
 // Read, at the current position of ir, the associated reference of the Data of its Index and return it. When a new key is inserted, the reference which is initially attached to it has the value BNil. The reset position of an index has, itself, an associated reference, legible by IndexReader.ReadValue.
 func (ir *IndexReader) ReadValue () FilePos {
@@ -2755,7 +2798,7 @@ func (ir *IndexReader) ReadValue () FilePos {
 	s := ind.baseI.readPage(ir.posI, sif).(*stringI)
 	ind.baseI.release(ir.posI)
 	return s.dataPos
-}
+} //ReadValue
 
 // Write on the current position of iw the associated reference val of a Data into its Index. When a new key is inserted, the data which is initially attached to it has the value BNil. The reset position of an index has, itself, a associated data, modifiable by IndexWriter.WriteValue.
 func (iw *IndexWriter) WriteValue (val FilePos) {
@@ -2763,10 +2806,10 @@ func (iw *IndexWriter) WriteValue (val FilePos) {
 	ind.baseI.readPage(iw.posI, sif).(*stringI).dataPos = val
 	ind.baseI.writePage(iw.posI)
 	ind.baseI.release(iw.posI)
-}
+} //WriteValue
 //
 //func init () {
 //	var err error
 //	backgroundUpdtDuration, err = time.ParseDuration(backgroundUpdtDurationStr)
 //	M.Assert(err == nil, err, 100)
-//}
+//} //init

@@ -256,7 +256,7 @@ func TestG1 (tt *testing.T) {
 	e := t.First(&el)
 	for n < nbElems || e != nil {
 		if n % 1000 == 0 {
-			fmt.Println("time =", n, "\tnumber =", m, "\tsize =", x)
+			//fmt.Println("time =", n, "\tnumber =", m, "\tsize =", x)
 		}
 		n++
 		if n < nbElems {
@@ -313,7 +313,7 @@ func TestG2 (tt *testing.T) {
 	e := t.First(&el)
 	for n < nbElems || e != nil {
 		if n % 1000 == 0 {
-			fmt.Println("time =", n, "\tnumber =", m, "\tsize =", x)
+			//fmt.Println("time =", n, "\tnumber =", m, "\tsize =", x)
 		}
 		n++
 		if n < nbElems {
@@ -366,11 +366,11 @@ func TestG3 (tt *testing.T) {
 	var f StringFac
 	ind := b.OpenIndex(rI, g, f)
 	iw := ind.Writer()
-	fmt.Println("nb. of keys = ", nbCles)
-	fmt.Println()
+	//fmt.Println("nb. of keys = ", nbCles)
+	//fmt.Println()
 	for i := 1; i <= nbCles; i++ {
 		if i % 1000 == 0 {
-			fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		for {
 			n := int(gen.IntRand(1, maxCles))
@@ -389,15 +389,15 @@ func TestG3 (tt *testing.T) {
 	for j == i {
 		j = int(gen.IntRand(0, nbCles))
 	}
-	fmt.Println("nb. of suppressed keys = ", M.Abs(i - j))
-	fmt.Println()
+	//fmt.Println("nb. of suppressed keys = ", M.Abs(i - j))
+	//fmt.Println()
 	ir := ind.NewReader()
 	for m := 0; m < M.Min(i, j); m++ {
 		ir.Next()
 	}
 	for m := 1; m <= M.Abs(i - j); m++ {
 		if m % 100 ==  0 {
-			fmt.Println(m)
+			//fmt.Println(m)
 		}
 		irc := ir.Clone()
 		irc.Next()
@@ -414,8 +414,8 @@ func TestG3 (tt *testing.T) {
 		//fmt.Println(cle.C)
 		ir.Next()
 	}
-	fmt.Println()
-	fmt.Println("nb of remaining keys = ", m);
+	//fmt.Println()
+	//fmt.Println("nb of remaining keys = ", m);
 	b.DeleteIndex(rI)
 	fmt.Println("Size = ", b.End())
 	b.CloseBase()
@@ -442,7 +442,7 @@ func TestG4 (tt *testing.T) {
 	iw := ind.Writer()
 	for i := 1; i <= nbCles; i++ {
 		if i % 1000 == 0 {
-			fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		j := new(integer)
 		*j = integer(gen.IntRand(0, maxInt))
@@ -450,7 +450,7 @@ func TestG4 (tt *testing.T) {
 			*j = integer(gen.IntRand(0, maxInt))
 		}
 	}
-	fmt.Println()
+	//fmt.Println()
 	
 	i := int(gen.IntRand(0, nbCles))
 	for m := 0; m < i; m++ {
@@ -460,14 +460,14 @@ func TestG4 (tt *testing.T) {
 		ok := iw.Erase(cle); M.Assert(ok)
 	}
 	
-	iw.ResetPos()
-	iw.Next()
-	for iw.PosSet() {
-		i := iw.CurrentKey().(*integer)
-		fmt.Println(*i)
-		iw.Next()
-	}
-	fmt.Println()
+	//iw.ResetPos()
+	//iw.Next()
+	//for iw.PosSet() {
+		//i := iw.CurrentKey().(*integer)
+		//fmt.Println(*i)
+		//iw.Next()
+	//}
+	//fmt.Println()
 	fmt.Println("Size = ", b.End())
 	b.DeleteIndex(rI)
 	fmt.Println("Size = ", b.End())
@@ -502,7 +502,7 @@ func TestG5 (tt *testing.T) {
 	e := t.First(&el)
 	for n < nbElems || e != nil {
 		if n % 1000 == 0 {
-			fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		n++
 		if n < nbElems {
@@ -566,7 +566,7 @@ func TestG6 (tt *testing.T) {
 	e := t.First(&el)
 	for n < nbElems {
 		if n % 1000 == 0 {
-			fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		n++
 		eF := new(elemCle)
@@ -590,12 +590,12 @@ func TestG6 (tt *testing.T) {
 			e = t.First(&el)
 		}
 	}
-	iw.Next()
-	for iw.PosSet() {
-		cle := iw.CurrentKey().(*String)
-		fmt.Println(cle.C); fmt.Println()
-		iw.Next()
-	}
+	//iw.Next()
+	//for iw.PosSet() {
+		//cle := iw.CurrentKey().(*String)
+		//fmt.Println(cle.C); fmt.Println()
+		//iw.Next()
+	//}
 	b.DeleteIndex(rI)
 	fmt.Println("Size = ", b.End())
 	b.CloseBase()
@@ -621,7 +621,7 @@ func TestG7 (tt *testing.T) {
 	iw := ind.Writer()
 	for i := 0; i < nbCles; i++ {
 		if i % 1000 == 0 {
-			fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(i, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		r := new(real)
 		*r = real(gen.Random())
@@ -638,15 +638,16 @@ func TestG7 (tt *testing.T) {
 		ok := iw.Erase(clef); M.Assert(ok)
 	}
 	
-	iw.ResetPos()
-	iw.Next()
-	for iw.PosSet() {
-		cle := iw.CurrentKey().(*real)
-		fmt.Println(float64(*cle))
-		iw.Next()
-	}
-	fmt.Println()
+	//iw.ResetPos()
+	//iw.Next()
+	//for iw.PosSet() {
+		//cle := iw.CurrentKey().(*real)
+		//fmt.Println(float64(*cle))
+		//iw.Next()
+	//}
+	//fmt.Println()
 	b.DeleteIndex(rI)
+	fmt.Println("Size = ", b.End())
 	b.CloseBase()
 }
 
@@ -682,7 +683,7 @@ func TestG8 (tt *testing.T) {
 	e := t.First(&el)
 	for n < nbElems {
 		if n % 1000 == 0 {
-			fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
+			//fmt.Println(n, "\theight =", ind.Height(), "\tsize =", ind.NumberOfKeys())
 		}
 		n++
 		eF := new(elemCle)
@@ -719,13 +720,13 @@ func TestG8 (tt *testing.T) {
 			e = t.First(&el)
 		}
 	}
-	iw.ResetPos()
-	iw.Next()
-	for iw.PosSet() {
-		cle := iw.CurrentKey().(*String)
-		fmt.Println(cle.C); fmt.Println()
-		iw.Next()
-	}
+	//iw.ResetPos()
+	//iw.Next()
+	//for iw.PosSet() {
+		//cle := iw.CurrentKey().(*String)
+		//fmt.Println(cle.C); fmt.Println()
+		//iw.Next()
+	//}
 	b.DeleteIndex(rI)
 	fmt.Println("Size = ", b.End())
 	b.CloseBase()

@@ -34,6 +34,9 @@ var (
 
 type (
 	
+	scalarer struct {
+	}
+	
 	typeSystem struct {
 		G.TypeSystem
 	}
@@ -131,6 +134,8 @@ type (
 )
 
 var (
+	
+	sl scalarer
 	
 	idS = S.Full()
 	iter = idS.Attach()
@@ -850,7 +855,7 @@ func iDnCoercer (ts G.TypeSystem, value G.Value, path G.Path, cValue *G.Value) b
 	return false
 } //iDnCoercer
 
-func (ts *typeSystem) FixScalarCoercer (scalarName string, sc *G.ScalarCoercer) {
+func (scalarer) FixScalarCoercer (scalarName string, sc *G.ScalarCoercer) {
 	switch scalarName {
 	case "IDn":
 		*sc = iDnCoercer
@@ -929,7 +934,7 @@ func NewTypeSystem () *E.Executor {
 	)
 	
 	ts := new(typeSystem)
-	ts.TypeSystem = G.Dir.NewTypeSystem(ts)
+	ts.TypeSystem = G.Dir.NewTypeSystem(sl)
 	ov := G.NewOutputObjectValue()
 	ov.InsertOutputField(rootName, G.MakeAnyValue(db))
 	exe := E.NewExecutor()

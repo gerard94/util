@@ -25,7 +25,7 @@ import (
 
 const (
 	
-	version = "1.0.1"
+	version = "1.0.2"
 
 )
 
@@ -56,6 +56,20 @@ const (
 	
 	MaxByte = MaxUint8
 	MaxRune = MaxInt32
+
+)
+
+type (
+	
+	Nerror interface {
+		error
+		ErrorNum () int
+	}
+	
+	numError struct {
+		n int
+		s string
+	}
 
 )
 
@@ -270,5 +284,17 @@ func InstantClose (f *os.File) error {
 }
 
 func Version () string {
-	return Version()
+	return version
+}
+
+func (e *numError) Error () string {
+	return e.s
+}
+
+func (e *numError) ErrorNum () int {
+	return e.n
+}
+ 
+func NewError (text string, number int) Nerror {
+	return &numError{s: text, n: number}
 }

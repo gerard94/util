@@ -54,6 +54,7 @@ const (
 	// Introspection definition file name
 	introName = "gqIntrospection.txt"
 	
+	// Prefix added to error messages
 	ErrorPrefix = "#util/graphQL:"
 
 )
@@ -103,8 +104,7 @@ const (
 	l_INPUT_OBJECT
 	l_INPUT_FIELD_DEFINITION
 	
-	// Ranks of root operation types in "typeSystem.root"
-	
+	// Ranks of root operation types in 'typeSystem.root', 'OperationTypeDefinition.OpType' and 'OperationDefinition.OpType'
 	QueryOp = l_QUERY
 	MutationOp = l_MUTATION
 	SubscriptionOp = l_SUBSCRIPTION
@@ -329,7 +329,6 @@ type (
 	}
 	
 	// Stream of OutputObjectValue(s)
-	
 	EventStreamer interface {
 		StreamName () string
 		RecordNotificationProc (notification SourceEventNotification)
@@ -2347,7 +2346,7 @@ func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.O
 	}
 	ok = true
 	return
-}
+} //Execution
 
 func PrintDocument (w io.Writer, doc *Document) {
 	J.BuildJsonFrom(doc).Write(w)
@@ -3911,20 +3910,32 @@ func (ts *typeSystem) validateValueIV (name *StrPtr, value, defVal Value, typ Ty
 	if !ts.isConstInputValueCoercibleToType (value, defVal, typ, vd) {
 		ts.internError("UnableToCoerce", name.S, "", name.P, nil)
 	}
-	d := ts.getTypeDefinition(namedTypeOf(typ).Name)
-	if d != nil {
-		switch d := d.(type) {
-		case *InputObjectTypeDefinition:
-			value = InstantiateVariable(value, vd)
-			if value != nil {
-				switch value := value.(type) {
-				case *InputObjectValue:
-					ValidateInputObject(value, d, name, vd)
-				default:
-					ts.internError("IncorrectValueType", name.S, "", name.P, nil)
-				}
+	switch typ := typ.(type) {
+	case *NonNullType:
+		ts.validateValueIV(name, value, nil, typ.NullT, vd)
+	case *ListType:
+		switch value := value.(type) {
+		case *ListValue:
+			for e := value.First(); e != nil; e = value.Next(e) {
+				ts.validateValueIV(name, e.Value, nil, typ.ItemT, vd)
 			}
-		default:
+		}
+	case *NamedType:
+		d := ts.getTypeDefinition(typ.Name)
+		if d != nil {
+			switch d := d.(type) {
+			case *InputObjectTypeDefinition:
+				value = InstantiateVariable(value, vd)
+				if value != nil {
+					switch value := value.(type) {
+					case *InputObjectValue:
+						ValidateInputObject(value, d, name, vd)
+					default:
+						ts.internError("IncorrectValueType", name.S, "", name.P, nil)
+					}
+				}
+			default:
+			}
 		}
 	}
 } //validateValueIV
@@ -4160,7 +4171,7 @@ func (ts *typeSystem) validateValueVV (ivd *InputValueDefinition, typ Type, valu
 			switch typ := typ.(type) {
 			case *ListType:
 				for vl := value.First(); vl != nil; vl = value.Next(vl) {
-					ts.validateValueVV(nil, typ.ItemT, vl.Value, opName, varDefs, vars)
+					ts.validateValueVV(ivd, typ.ItemT, vl.Value, opName, varDefs, vars)
 				}
 			case *NonNullType:
 				ts.validateValueVV(ivd, typ.NullT, value, opName, varDefs, vars)

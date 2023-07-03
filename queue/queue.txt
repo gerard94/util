@@ -1,0 +1,31 @@
+package queue
+
+type (
+	
+	Elem[T any]	struct {
+	}
+
+	Queue[T any]	struct {
+	}
+
+)
+
+func (q *Queue[T]) Init()
+
+func NewQueue[T any]() *Queue[T]
+
+func (q *Queue[T]) IsEmpty() bool
+
+func (q *Queue[T]) Push(val T)
+
+func (q *Queue[T]) PushN(n int, val T) (ok bool)
+
+func (q *Queue[T]) Pull(val *T) (ok bool)
+
+func (q *Queue[T]) Pop() (val T)
+
+func (q *Queue[T]) PullN(n int, val *T) (ok bool)
+
+func (q *Queue[T]) Next(e *Elem[T]) *Elem[T]
+
+func (e *Elem[T]) Val() T

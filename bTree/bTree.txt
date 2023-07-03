@@ -1,0 +1,426 @@
+package bTree
+
+import (
+
+	A "git.duniter.org/gerard94/util/avl"
+
+)
+
+const (
+
+	// Nil pointer in a database.
+	BNil	= FilePos(0)
+
+	// Sizes of data in bytes.
+	BOS	= 1
+	BYS	= 1
+	SIS	= 2
+	INS	= 4
+	LIS	= 8
+	SRS	= 4
+	RES	= 8
+)
+
+type (
+	
+	// Result of a comparaison.
+	Comp	= A.Comp
+
+)
+
+const (
+	
+	// Comp; result of a comparaison.
+	Lt	= Comp(-1) // Less than.
+	Eq	= Comp(0) // Equal.
+	Gt	= Comp(+1) // Greater than.
+
+)
+
+type (
+	
+	// Position in a file, in bytes.
+	FilePos	int64
+	
+	// Slice of byte(s).
+	Bytes	[]byte
+	
+	// Interface for file management.
+	Filer	interface {
+		
+		// Close the file.
+		Close()
+		
+		// Flush the file on disk.
+		Flush()
+		
+		// Set the reading position of the file to pos; the first position is 0.
+		PosReader(pos FilePos)
+		
+		// Read a slice of n bytes from the file at reading position.
+		Read(n int) Bytes
+		
+		// Set the writing position of the file to pos; the first position is 0.
+		PosWriter(pos FilePos)
+		
+		// Write the slice b to the file at writing position.
+		Write(b Bytes)
+		
+		// Return the length of the file.
+		End() FilePos
+		
+		// Truncate the file at the length end.
+		Truncate(end FilePos)
+		
+		// Read and return a float64 from the slice b at position pos; put pos at the position following the float64.
+		BytesToFloat64(b Bytes, pos *int) float64
+		
+		// Read and return a float32 from the slice b at position pos; put pos at the position following the float32.
+		BytesToFloat32(b Bytes, pos *int) float32
+		
+		// Return a pointer to a slice of bytes coding for f.
+		Float64ToBytes(f float64) Bytes
+		
+		// Return a pointer to a slice of bytes coding for f.
+		Float32ToBytes(f float32) Bytes
+	
+	} //Filer
+	
+	// A file containing a database.
+	File	struct {
+		
+		Filer
+	
+	} //File
+	
+	// Interface for a Factory.
+	Factorer	interface {
+		
+		// Create a file with name nF. Don't open this file.
+		Create(nF string) bool
+		
+		// Open a file with name nF and return this file. Return nil if the file does not exist.
+		Open(nF string) *File
+	
+	} //Factorer
+	
+	// Factory for files and databases.
+	Factory	struct {
+		
+		Factorer
+		
+		// Create a new file of name nF, with the help of fac, and a database inside this file, with placeNb fixed places. Don't open this database. Fixed places are locations where can be recorded integers, i.e. data pointers.
+		func (fac *Factory) CreateBase(nF string, placeNb int) bool
+		
+		// Open and return, with the help of fac, the database created in the file of name nF. pageNb is the maximal number of allocated buffer pages. Return nil if the file does not exit or can't be opened.
+		func (fac *Factory) OpenBase(nF string, pageNb int) *Database
+		
+		// Verify, with the help of fac, if the file nF exists and if it contains a database; return true in this case; the base must be closed.
+		func (fac *Factory) TestBase(nF string) bool
+		
+		// Close, with the help of fac, the database created in the file of name nF, if it exists and is open. It is a rescue func. Use it only in case of an accidentally kept open database. Normally, use Database.CloseBase.
+		func (fac *Factory) CloseBase(nF string)
+	
+	} //Factory
+	
+	// A database
+	Database	struct {
+		
+		// Return the length (number of bytes) of base.
+		func (base *Database) End() FilePos
+		
+		// Update the database base on disk.
+		func (base *Database) UpdateBase()
+		
+		// Close the database base.
+		func (base *Database) CloseBase()
+		
+		// Return the number of fixed places in base.
+		func (base *Database) PlaceNb() int
+		
+		// Read and return the content of the fixed place place of the database base. The first place has number 0.
+		func (base *Database) ReadPlace(place int) int64
+		
+		// Write val in the fixed place place of the database base. The first place has number 0.
+		func (base *Database) WritePlace(place int, val int64)
+		
+		// Create and return a new manager of the data created by fac in the database base.
+		func (base *Database) CreateDataMan(fac DataFac) *DataMan
+		
+		// Create a new index in the database base and return its reference, but do not open it. keySize is the size of keys. If keys have a fixed size, put this size in keySize. If the size of keys does not vary much, put the greatest size in keySize. If the greatest size of keys is unknown, or if this size vary much, or if you want to use prefixes, put zero in keySize: you'll have to fix the size of each key later.
+		func (base *Database) CreateIndex(keySize int) FilePos
+		
+		// Open and return an index created with the reference ref by Database.CreateIndex in the database base. man is the key manager of the index and f is the factory of its keys. The current position of the index is reset.
+		func (base *Database) OpenIndex(ref FilePos, man *KeyManager, f DataFac) *Index
+		
+		// Delete the index at position ref in the database base.
+		func (base *Database) DeleteIndex(ref FilePos)
+			
+	} //Database
+	
+	// Content of a page, used to store data or key.
+	Data	interface {
+		
+		Read(r *Reader)
+		
+		Write(w *Writer)
+	
+	} //Data
+	
+	// Factory of Data.
+	DataFac	interface {
+		
+		New(size int) Data
+	
+	} //DataFac
+	
+	// Reader of a byte stream.
+	Reader	struct {
+		
+		// Return the length of the input stream owned by r, in bytes.
+		func (r *Reader) Len() int
+		
+		// Return the position of r in its input stream, in bytes.
+		func (r *Reader) Pos() int
+		
+		// Read a byte from the input stream.
+		func (r *Reader) InByte() byte
+		
+		// Read a int8 from the input stream.
+		func (r *Reader) InInt8() int8
+		
+		// Read an array of bytes from the input stream.
+		func (r *Reader) InBytes(len int) Bytes
+		
+		// Read a bool from the input stream.
+		func (r *Reader) InBool() bool
+		
+		// Read a string length from the input stream; preserves the position in the stream.
+		func (r *Reader) InStringLen() int
+		
+		// Read a string from the input stream.
+		func (r *Reader) InString() string
+		
+		// Read an uint16 from the input stream.
+		func (r *Reader) InUint16() uint16
+		
+		// Read an int16 from the input stream.
+		func (r *Reader) InInt16() int16
+		
+		// Read an uint32 from the input stream.
+		func (r *Reader) InUint32() uint32
+		
+		// Read an int32 from the input stream.
+		func (r *Reader) InInt32() int32
+		
+		// Read an uint64 from the input stream.
+		func (r *Reader) InUint64() uint64
+		
+		// Read a FilePos from the input stream.
+		func (r *Reader) InFilePos() FilePos
+		
+		// Read an int64 from the input stream.
+		func (r *Reader) InInt64() int64
+		
+		// Read a float32 from the input stream. Use File.BytesToFloat32.
+		func (r *Reader) InFloat32() float32
+		
+		// Read a float64 from the input stream. Use File.BytesToFloat64.
+		func (r *Reader) InFloat64() float64
+	
+	} //Reader
+	
+	// Writer on a byte stream.
+	Writer	struct {
+		
+		// Write a byte to the output stream.
+		func (w *Writer) OutByte(c byte)
+		
+		// Write an int8 to the output stream.
+		func (w *Writer) OutInt8(c int8)
+		
+		// Write a Bytes to the output stream.
+		func (w *Writer) OutBytes(b Bytes)
+		
+		// Write a bool to the output stream.
+		func (w *Writer) OutBool(b bool)
+		
+		// Write a string to the output stream.
+		func (w *Writer) OutString(c string)
+		
+		// Write a uint16 to the output stream.
+		func (w *Writer) OutUint16(n uint16)
+		
+		// Write a int16 to the output stream.
+		func (w *Writer) OutInt16(n int16)
+		
+		// Write a uint32 to the output stream.
+		func (w *Writer) OutUint32(n uint32)
+		
+		// Write a int32 to the output stream.
+		func (w *Writer) OutInt32(n int32)
+		
+		// Write a uint64 to the output stream.
+		func (w *Writer) OutUint64(n uint64)
+		
+		// Write a FilePos to the output stream.
+		func (w *Writer) OutFilePos(n FilePos)
+		
+		// Write a int64 to the output stream.
+		func (w *Writer) OutInt64(n int64)
+		
+		// Write a float32 to the output stream. Use File.Float32ToBytes.
+		func (w *Writer) OutFloat32(r float32)
+		
+		// Write a float64 to the output stream. Use File.Float64ToBytes.
+		func (w *Writer) OutFloat64(r float64)
+	
+	} //Writer
+	
+	// Manager of Data
+	DataMan	struct {
+		
+		// Read user data m in the database of m at position ptr.
+		func (m *DataMan) ReadData(ptr FilePos) Data
+		
+		// Consider using AllocateData or, better, WriteAllocateData instead. Allocate a cluster of size size, managed by m, in the database of m, and return its position.
+		func (m *DataMan) AllocateSize(size int) FilePos
+		
+		// Consider using WriteAllocateData instead. Allocate a cluster for data, managed by m, in the database of m, and return its position. Warning: AllocateData calls data.Write to find the size of data, be sure the value of data can be written and has its correct size.
+		func (m *DataMan) AllocateData(data Data) FilePos
+		
+		// Allocate a cluster for data, managed by m, in the database of m, and write data into it; return the position of the allocated cluster.
+		func (m *DataMan) WriteAllocateData(data Data) FilePos
+		
+		// Write data, managed by m, at the position ptr in the database of m.
+		func (m *DataMan) WriteData(ptr FilePos, data Data)
+		
+		// Erase data managed by m at position ptr in the database of m.
+		func (m *DataMan) EraseData(ptr FilePos)
+	
+	} //DataMan
+	
+	// String, satisfies Data.
+	String	struct {
+		
+		C string
+		
+		// Write s.C with the help of the writer w. The length of the production is 2 * (len(s.C)+ 1).
+		func (s *String) Write(w *Writer)
+		
+		// Read s.C with the help of the reader r.
+		func (s *String) Read(r *Reader)
+	
+	} //String
+	
+	// Factory of String; satisfies DataFac.
+	StringFac	struct {
+		
+		// Create a String.
+		func (f StringFac) New(size int) Data
+	
+	} //StringFac
+	
+	// Compare two strings.
+	StringComparer = func(key1, key2 Data) Comp
+	
+	// Index, structured as a btree.
+	Index	struct {
+		
+		// Return the height of 'ind'
+		func (ind *Index) Height() int
+		
+		// Create a new IndexReader for ind. An IndexReader keeps a position in an Index and can update this position or read values there. Just after being created, its position is reseted.
+		func (ind *Index) NewReader() *IndexReader
+		
+		// Return the IndexWriter of ind. An IndexWriter keeps a position in an Index and can update this position or read/write values there. Just after the opening of an index, the position of its writer is reseted.
+		func (ind *Index) Writer() *IndexWriter
+		
+		// Test the emptiness of ind
+		func (ind *Index) IsEmpty() bool
+		
+		// Return the number of different keys in ind
+		func (ind *Index) NumberOfKeys() int
+	
+	} //Index
+	
+	// Reader of an index; each index may create several independant readers.
+	IndexReader	struct {
+		
+		// Duplicate ir.
+		func (ir *IndexReader) Clone() *IndexReader
+		
+		// Return the Index of ir.
+		func (ir *IndexReader) Ind() *Index
+		
+		// Seek in the index of ir the key key. The result indicates if the key was found. Fix the current position of ir on the found key or on the key which is immediately after the sought key in the event of unfruitful search.
+		func (ir *IndexReader) Search(key Data) bool
+		
+		// Reset the current position of ir. After this action, ir.PosSet() returns false.
+		func (ir *IndexReader) ResetPos()
+		
+		// Test if ir is positioned on a key (return true) or if its current position is reset (false returned).
+		func (ir *IndexReader) PosSet() bool
+		
+		// Position ir on the next key. If the current position is reset, ir is positioned on the first key. If ir is positioned on the last key, its current position becomes reset.
+		func (ir *IndexReader) Next()
+		
+		// Position ir on the previous key. If the current position is reset, ir is positioned on the last key. If ir is positioned on the first key, its current position becomes reset.
+		func (ir *IndexReader) Previous()
+		
+		// Return the value of the key in the current position of ir, or nil if the current position of ir is reset.
+		func (ir *IndexReader) CurrentKey() Data
+		
+		// Read, at the current position of ir, the associated reference of the Data of its Index and return it. When a new key is inserted, the reference which is initially attached to it has the value BNil. The reset position of an index has, itself, an associated reference, legible by IndexReader.ReadValue.
+		func (ir *IndexReader) ReadValue() FilePos
+	
+	} //IndexReader
+	
+	// Writer of an index; each index owns only one writer.
+	IndexWriter	struct {
+		
+		IndexReader
+		
+		// Seek in the index of iw the key key and insert it if it is not there already. The result indicates if the key was found. Fix the current position of iw on the key found or inserted.
+		func (iw *IndexWriter) SearchIns(key Data) bool
+		
+		// Erase from the index of iw the key key. If key does not belong to the index, ind.Erase does nothing and returns false, otherwise it returns true. If the current position of iw was on the erased key, it is reset.
+		func (iw *IndexWriter) Erase(key Data) bool
+		
+		// Write on the current position of iw the associated reference val of a Data into its Index. When a new key is inserted, the data which is initially attached to it has the value BNil. The reset position of an index has, itself, a associated data, modifiable by IndexWriter.WriteValue.
+		func (iw *IndexWriter) WriteValue(val FilePos)
+			
+	} //IndexWriter
+	
+	// Interface for managers of index keys.
+	KeyManagerer	interface {
+		
+		// Comparison method. s1 and s2 are the keys to be compared. The result can be Lt (s1 < s2), Eq (s1 = s2) or Gt (s1 > s2). KeyManagerer.CompP must induce a total order on the set of keys.
+		CompP(s1, s2 Data) Comp
+		
+		// Create a prefix of a key. On input key1 and key2 are two keys, with key1 < key2. On output, key2 may be modified, but cannot be enlarged, so that it becomes a prefix of its previous value. A prefix Pref(key1, key2) of  the key key2 in relation to the key key1 is defined by:
+		//	1) Pref(key1, key2) is a key, which can be compared to other keys by the mean of the method KeyManagerer.CompP;
+		//	2) Pref(key1, key2) is the shortest key with key1 < Pref(key1, key2) <= key2;
+		//	3) key1 may have a null length and, in this case, must be considered less than any other key.
+		// Prefixes are useful if keys are long or if their lengths vary much. In this case, if KeyManagerer.PrefP is instantiated, database is shorter and searches are faster.
+		PrefP(key1 Data, key2 *Data)
+	
+	} //KeyManagerer
+	
+	// Manager of index keys.
+	KeyManager	struct {
+		
+		KeyManagerer
+	
+	} //KeyManager
+
+)
+
+// Make a KeyManager out of a KeyManagerer.
+func MakeKM(k KeyManagerer) *KeyManager
+
+// Create a KeyManeger for String(s).
+func StringKeyManager() *KeyManager
+
+// Create a prefix of the String key2, in relation with key1 and the comparison function compare; see PrefP.
+func StringPrefP(key1, key2 *String, compare StringComparer) *String

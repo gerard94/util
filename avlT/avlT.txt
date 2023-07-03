@@ -1,0 +1,119 @@
+package avlT
+
+type (
+	
+	// Result of a comparison.
+	Comp	int8
+	
+	// Type of function used by 'WalkThrough'; 'v' is the value of an element of tree, 'p' are parameters.
+	DoFunc[T any]	func(v T, p ...interface{})
+
+)
+
+const (
+	
+	//Results of comparison.
+	Lt	= Comp(-1)
+	Eq	= Comp(0)
+	Gt	= Comp(+1)
+
+)
+
+type (
+	
+	// Values in elements of trees must verify the interface 'Copier'; for a value 'val', 'val.Copy ()' must return a copy of 'val'.
+	Copier[T any]	interface {
+		
+		// Copy a value.
+		Copy() T
+	
+	}
+
+	Comparer[T any]	interface {
+		
+		// Compare two values; the comparison must be reflexive, transitive, antisymmetric and total.
+		Compare(T) Comp
+	
+	}
+
+	CompCopier[T any]	interface {
+		Comparer[T]
+		Copier[T]
+	}
+
+	// Element of a tree.
+	Elem[T any]	struct {
+	}
+
+	// A tree.
+	Tree[T any]	struct {
+	}
+
+)
+
+// New creates a new tree.
+func New[T any] () *Tree[T]
+
+// Is 't' empty?
+func (t *Tree[T]) IsEmpty () bool
+
+// 'Empty' empties 't'
+func (t *Tree[T]) Empty ()
+
+/ 'Val' returns the value contained in the element 'e'.
+func (e *Elem[T]) Val () T
+
+// 'SetVal' sets the value 'v' into the element 'e'.
+func (e *Elem[T]) SetVal (v T)
+
+// 'Copy' returns a copy of 't'; values owned by elements of 't' must verify the interface 'Copier'
+func Copy[T Copier[T]] (t *Tree[T]) *Tree[T]
+
+// 'SearchIns' searches the value 'key' in the sorted tree 't'; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, it is inserted into a new element returned in 'res', 'found' is false and 'rank' returns the rank of the new element.
+// The rank of the first element in a tree is 1.
+func SearchIns[T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int)
+
+// 'Search' searches the value 'key' in the sorted tree 't'; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, 'res' is nil, 'found' is false and 'rank' is 0.
+// The rank of the first element in a tree is 1.
+func Search[T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int)
+
+// SearchNext searches the value 'key' in the sorted tree 't', or the next value if not found; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, 'found' is false, 'res' returns the element containing the next value and its rank is returned in 'rank'; if 'key' is not found and there is no next value, 'res' is nil and 'rank' is 0.
+// The rank of the first element in a tree is 1.
+func SearchNext[T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int)
+
+// 'Delete' erases the value 'key', if it exists, in the sorted tree 't'; returns true if 'key' is found, else does nothing.
+func Delete[T Comparer[T]] (t *Tree[T], key T) bool
+
+// 'NumberOfElems' returns the number of elements in the tree 't'.
+func (t *Tree[T]) NumberOfElems () int
+
+// 'Insert' inserts the value 'key' at the position Min(Max(rank, 1), t.NumberOfElems() + 1) in the tree 't'.
+// The rank of the first element in a tree is 1.
+func (t *Tree[T]) Insert (key T, rank int)
+
+// 'Prepend' inserts the value 'key' at the first place into the tree 't'.
+func (t *Tree[T]) Prepend (key T)
+
+// 'Append' inserts the value 'key' at the last place into the tree 't'.
+func (t *Tree[T]) Append (key T)
+
+// 'Erase' erases the element at position 'rank' in the tree 't'; 'rank' must verify 1 <= rank <= t.NumberOfElems().
+func (t *Tree[T]) Erase (rank int)
+
+// 'Find' finds and returns in 'res' the element at position 'rank' in the tree 't'; if the element does not exist, 'found' is false and 'res' returns nil.
+func (t *Tree[T]) Find (rank int) (res *Elem[T], found bool)
+
+// 'Cat' concatenates the trees 't1' and 't2'; it returns the result in 't1', and 't2' is no more valid.
+func (t1 *Tree[T]) Cat (t2 *Tree[T])
+
+// Splits the tree 't1' after the element of rank 'after'; the result is returned in 't1' and 't2'.
+func (t1 *Tree[T]) Split (after int) (t2 *Tree[T])
+
+// 'WalkThrough' traverses the tree 't' in inorder and calls the function 'do', with 'p' as parameters, on the value of each element.
+func (t *Tree[T]) WalkThrough (do DoFunc[T], p ...interface{})
+
+// 'Next' returns the element following 'e' in the tree 't'; if 'e' is nil, the first element is returned; if 'e' is the last element of the tree, nil is returned.
+func (t *Tree[T]) Next (e *Elem[T]) *Elem[T]
+
+// 'Previous' returns the element preceding 'e' in the tree 't'; if 'e' is nil, the last element is returned; if 'e' is the first element of the tree, nil is returned.
+func (t *Tree[T]) Previous (e *Elem[T]) *Elem[T]

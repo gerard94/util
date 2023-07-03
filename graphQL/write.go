@@ -13,7 +13,7 @@ import (
 
 type (
 	
-	ObjectValue interface {
+	objectValue interface {
 		First () *ObjectField
 		Next (f *ObjectField) *ObjectField
 	}
@@ -145,7 +145,7 @@ func writeValue (w S.Writer, flat bool, v Value, mS *bool) {
 			}
 			w.WriteString("]")
 			*mS = false
-		case ObjectValue:
+		case objectValue:
 			w.WriteString("{")
 			if f := v.First(); f != nil {
 				*mS = false
@@ -863,3 +863,27 @@ func WriteValue (w io.Writer, v Value) {
 func  WriteValueFlat (w io.Writer, v Value) {
 	fmt.Fprintf(w, "%s", GetValueFlatString(v))
 } //WriteValueFlat
+
+func getTString (t Type, flat bool) string {
+	es := S.Dir().New()
+	w := es.NewWriter()
+	var mS bool
+	writeType(w, flat, t, &mS)
+	return es.Convert()
+} //getTString
+
+func GetTypeString (t Type) string {
+	return getTString(t, false)
+} //GetTypeString
+
+func GetTypeFlatString (t Type) string {
+	return getTString(t, true)
+} //GetTypeFlatString
+
+func WriteType (w io.Writer, t Type) {
+	fmt.Fprintf(w, "%s", GetTypeString(t))
+} //WriteType
+
+func  WriteTypeFlat (w io.Writer, t Type) {
+	fmt.Fprintf(w, "%s", GetTypeFlatString(t))
+} //WriteTypeFlat

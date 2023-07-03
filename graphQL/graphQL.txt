@@ -1,0 +1,633 @@
+package graphQL
+
+const (
+	
+	// Prefix added to error messages
+	ErrorPrefix = "#util/graphQL:"
+
+)
+
+const (
+	
+	// Ranks of root operation types in 'OperationTypeDefinition.OpType' and 'OperationDefinition.OpType'
+	QueryOp		= iota
+	MutationOp
+	SubscriptionOp
+
+)
+
+type (
+	
+	AnyPtr	interface {
+	}
+	
+	// Position in compiled text
+	PosT	struct {
+		// Position from start in bytes, line number, column number in bytes
+		P, L, C int
+	}
+	
+	// Aggregate of a string and of its position in compiled text
+	StrPtr	struct {
+		P	*PosT
+		S	string
+	}
+	
+	StrArray	[]string
+	
+	Location	struct {
+		Pos,
+		Line,
+		Column int
+	}
+	
+	Path	interface {
+		Next() Path
+	}
+	
+	PathString	struct { // Path
+		S string
+	}
+	
+	PathNb	struct { // Path
+		N int
+	}
+	
+	PathBuilder	struct {
+	}
+	
+	ErrorElem	struct {
+		Message		string
+		Location	*Location
+		Path		Path
+	}
+	
+	NameMapItem	struct {
+		Name *StrPtr
+	}
+	
+	ValMapItem	struct {
+		NameMapItem
+		Value	Value
+	}
+	
+	ScalarCoercer	func(ts TypeSystem, v Value, path Path, cV *Value) bool
+	
+	TypeDirectory	interface {
+		NewTypeSystem(sc Scalarer) TypeSystem
+	}
+	
+	Scalarer	interface {
+		FixScalarCoercer(scalarName string, sc *ScalarCoercer)
+	}
+	
+	TypeSystem	interface {
+		Scalarer
+		Error(mes string, pos *PosT, path Path)
+		MappedError(mes, aux1, aux2 string, pos *PosT, path Path)
+		GetErrors() *A.Tree // *ErrorElem
+		GetTypeDefinition(name string) TypeDefinition
+		FixFieldResolver(object, field string, resolver FieldResolver)
+		FixStreamResolver(fieldName string, resolver StreamResolver)
+		FixAbstractTypeResolver(resolver AbstractTypeResolver)
+		InitTypeSystem(doc *Document)
+		ExecValidate(doc *Document) ExecSystem
+		FixInitialValue(ov *OutputObjectValue)
+	}
+	
+	ExecSystem	interface {
+		TypeSystem
+		ListOperations() StrArray
+		GetOperation(operationName string) *OperationDefinition
+		Execute(doc *Document, operationName string, variableValues *A.Tree) Response // *ValMapItem
+	}
+	
+	// Stream of OutputObjectValue(s)
+	EventStreamer	interface {
+		StreamName() string
+		RecordNotificationProc(notification SourceEventNotification)
+		CloseEvent()
+	}
+	
+	EventStream	struct {
+		EventStreamer
+		ResponseStreams	ResponseStreams
+	}
+	
+	// Stream of Response(s)
+	ResponseStreamer	interface {
+		ManageResponseEvent(r Response)
+	}
+	
+	ResponseStream	struct {
+		ResponseStreamer
+		SourceStream	*EventStream
+	}
+	
+	ResponseStreams	[]*ResponseStream
+	
+	SourceEventNotification	func(es *EventStream, event *OutputObjectValue)
+	
+	FieldResolver	func(ts TypeSystem, rootValue *OutputObjectValue, argumentValues *A.Tree) Value // *ValMapItem
+	
+	StreamResolver	func(rootValue *OutputObjectValue, argumentValues *A.Tree) *EventStream // *ValMapItem
+	
+	AbstractTypeResolver	func(ts TypeSystem, td TypeDefinition, ov *OutputObjectValue) *ObjectTypeDefinition
+	
+	Response	interface {
+		Errors() *A.Tree // *ErrorElem
+		SetErrors(err *A.Tree) // *ErrorElem
+	}
+	
+	InstantResponse	struct { // Response
+		Data *OutputObjectValue
+	}
+	
+	SubscribeResponse	struct { // Response
+		Data	*ResponseStream
+		Name	string
+	}
+
+)
+
+var (
+	
+	StdDir	TypeDirectory	= new(typeDirectory)
+	Dir			= StdDir
+
+)
+
+type (
+	
+	InputObjectTypeExtension	struct {
+		TypeExtensionC
+		InFieldsDef	ArgumentsDefinition
+	}
+	
+	EnumTypeExtension	struct {
+		TypeExtensionC
+		EnumValsDef	EnumValuesDefinition
+	}
+	
+	UnionTypeExtension	struct {
+		TypeExtensionC
+		UnionMTypes	NamedTypes
+	}
+	
+	InterfaceTypeExtension	struct {
+		TypeExtensionC
+		ImpInter	NamedTypes
+		FieldsDef	FieldsDefinition
+	}
+	
+	ObjectTypeExtension	struct {
+		TypeExtensionC
+		ImpInter	NamedTypes
+		FieldsDef	FieldsDefinition
+	}
+	
+	ScalarTypeExtension	struct {
+		TypeExtensionC
+	}
+	
+	TypeExtensionC	struct {
+		Name	*StrPtr
+		Dirs	Directives
+	}
+	
+	TypeExtension	interface { //TypeSystemExtension
+		TypeSystemExtension
+		TEM() *TypeExtensionC
+	}
+	
+	SchemaExtension	struct { //TypeSystemExtension
+		Dirs		Directives
+		OpTypeDefs	OperationTypeDefinitions
+	}
+	
+	TypeSystemExtension	interface { //Definition
+		// contains filtered or unexported methods
+	}
+	
+	TypeSystemDirectiveLocation	struct { // DirectiveLocation
+		Loc int
+	}
+	
+	ExecutableDirectiveLocation	struct { // DirectiveLocation
+		Loc int
+	}
+	
+	DirectiveLocation	interface {
+		LocM() int
+	}
+	
+	DirectiveLocations	[]DirectiveLocation
+	
+	DirectiveDefinition	struct {
+		Desc	*StringValue
+		Name	*StrPtr
+		ArgsDef	ArgumentsDefinition
+		Rep	bool
+		DirLocs	DirectiveLocations // != nil
+	}
+	
+	InputObjectTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		InFieldsDef	ArgumentsDefinition // != nil
+	}
+	
+	EnumValueDefinition	struct {
+		Desc	*StringValue
+		EnumVal	*EnumValue
+		Dirs	Directives
+	}
+	
+	EnumValuesDefinition	[]*EnumValueDefinition
+	
+	EnumTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		EnumValsDef	EnumValuesDefinition // != nil
+	}
+	
+	UnionTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		UnionMTypes	NamedTypes
+	}
+	
+	InterfaceTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		ImpInter	NamedTypes
+		FieldsDef	FieldsDefinition
+	}
+	
+	InputValueDefinition	struct {
+		Desc	*StringValue
+		Name	*StrPtr
+		Type	Type
+		DefVal	Value
+		Dirs	Directives
+	}
+	
+	ArgumentsDefinition	[]*InputValueDefinition
+	
+	FieldDefinition	struct {
+		Desc	*StringValue
+		Name	*StrPtr
+		ArgsDef	ArgumentsDefinition
+		Type	Type
+		Dirs	Directives
+	}
+	
+	FieldsDefinition	[]*FieldDefinition
+	
+	NamedTypes	[]*NamedType
+	
+	ObjectTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		ImpInter	NamedTypes
+		FieldsDef	FieldsDefinition // != nil
+	}
+	
+	ScalarTypeDefinition	struct { //TypeDefinition
+		TypeDefinitionCommon
+		SpecifiedByURL	*StringValue
+	}
+	
+	TypeDefinitionCommon	struct {
+		Desc	*StringValue
+		Name	*StrPtr
+		Dirs	Directives
+	}
+	
+	TypeDefinition	interface {
+		TypeSystemDefinition
+		TypeDefinitionC() *TypeDefinitionCommon
+	}
+	
+	OperationTypeDefinition	struct {
+		OpType	int
+		Type	*NamedType
+	}
+	
+	OperationTypeDefinitions	[]OperationTypeDefinition
+	
+	SchemaDefinition	struct {
+		Desc		*StringValue
+		Dirs		Directives
+		OpTypeDefs	OperationTypeDefinitions
+	}
+	
+	TypeSystemDefinition	interface { // Definition
+	}
+	
+	FragmentDefinition	struct { // ExecutableDefinition
+		Name		*StrPtr
+		TypeCond	*NamedType // != nil
+		Dirs		Directives
+		SelSet		SelectionSet
+	}
+	
+	InlineFragment	struct { // Selection
+		TypeCond	*NamedType // may be nil
+		Dirs		Directives
+		SelSet		SelectionSet
+	}
+	
+	FragmentSpread	struct { // Selection
+		Name	*StrPtr
+		Dirs	Directives
+	}
+	
+	Field	struct { // Selection
+		Alias,
+		Name	*StrPtr
+		Arguments	Arguments
+		Dirs		Directives
+		
+		SelSet	SelectionSet
+	}
+	
+	Selection	interface {
+		DirsM() Directives
+	}
+	
+	SelectionSet	[]Selection
+	
+	Argument	struct {
+		Name	*StrPtr
+		Value	Value
+	}
+	
+	Arguments	[]Argument
+	
+	Directive	struct {
+		Name	*StrPtr
+		Args	Arguments
+	}
+	
+	Directives	[]Directive
+	
+	ObjectField	struct {
+		Name	*StrPtr
+		Value	Value
+	}
+	
+	InputObjectValue	struct { // Value
+	}
+	
+	OutputObjectValue	struct { // Value
+	}
+	
+	ValueElem	struct {
+		Value Value
+	}
+	
+	ListValue	struct { // Value
+	}
+	
+	AnyValue	struct { // Value
+		Any interface{}
+	}
+	
+	EnumValue	struct { // Value
+		Enum *StrPtr
+	}
+	
+	NullValue	struct { // Value
+	}
+	
+	BooleanValue	struct { // Value
+		Boolean bool
+	}
+	
+	StringValue	struct { // Value
+		String *StrPtr
+	}
+	
+	FloatValue	struct { // Value
+		Float float64
+	}
+	
+	IntValue	struct { // Value
+		Int int64
+	}
+	
+	Variable	struct { // Value
+		Name *StrPtr
+	}
+	
+	Value	interface {
+	}
+	
+	NonNullType	struct { // Type
+		NullT Type
+	}
+	
+	ListType	struct { // Type
+		ItemT Type
+	}
+	
+	NamedType	struct { // Type
+		Name *StrPtr
+	}
+	
+	Type	interface {
+	}
+	
+	VariableDefinition	struct {
+		Var	*StrPtr
+		Type	Type
+		DefVal	Value
+		Dirs	Directives
+	}
+	
+	VariableDefinitions	[]*VariableDefinition
+	
+	OperationDefinition	struct { // ExecutableDefinition
+		OpType	int
+		Name	*StrPtr
+		VarDefs	VariableDefinitions
+		Dirs	Directives
+		SelSet	SelectionSet
+	}
+	
+	ExecutableDefinition	interface { // Definition
+	}
+	
+	Definition	interface {
+	}
+	
+	Definitions	[]Definition
+	
+	Document	struct {
+		Defs Definitions
+	}
+
+)
+
+func (e *ScalarTypeExtension) TEM() *TypeExtensionC
+
+func (e *ObjectTypeExtension) TEM() *TypeExtensionC
+
+func (e *InterfaceTypeExtension) TEM() *TypeExtensionC
+
+func (e *UnionTypeExtension) TEM() *TypeExtensionC
+
+func (e *EnumTypeExtension) TEM() *TypeExtensionC
+
+func (e *InputObjectTypeExtension) TEM() *TypeExtensionC
+
+func MakeEventStream(es EventStreamer) *EventStream
+
+func (r *InstantResponse) Errors() *A.Tree
+
+func (r *InstantResponse) SetErrors(err *A.Tree)
+
+func (r *SubscribeResponse) Errors() *A.Tree
+
+func (r *SubscribeResponse) SetErrors(err *A.Tree)
+
+func (dir TypeSystemDirectiveLocation) LocM() int
+
+func (dir ExecutableDirectiveLocation) LocM() int
+
+func (i *InputObjectTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (e *EnumTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (u *UnionTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (i *InterfaceTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (o *ObjectTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (s *ScalarTypeDefinition) TypeDefinitionC() *TypeDefinitionCommon
+
+func (f *Field) DirsM() Directives
+
+func (f *FragmentSpread) DirsM() Directives
+
+func (i *InlineFragment) DirsM() Directives
+
+func (n1 *NameMapItem) Compare(n2 A.Comparer) A.Comp
+
+func (n *NameMapItem) Copy() A.Copier
+
+func (err1 *ErrorElem) Compare(err2 A.Comparer) A.Comp
+
+func MakeAnyValue(any AnyPtr) *AnyValue
+
+func (ov *InputObjectValue) First() *ObjectField
+
+func (*InputObjectValue) Next(f *ObjectField) *ObjectField
+
+func NewOutputObjectValue() *OutputObjectValue
+
+func (ov *OutputObjectValue) InsertOutputField(name string, value Value) *ObjectField
+
+func (ov *OutputObjectValue) First() *ObjectField
+
+func (ov *OutputObjectValue) Next(f *ObjectField) *ObjectField
+
+func NewListValue() *ListValue
+
+func (lv *ListValue) Append(value Value)
+
+func (lv *ListValue) Len() int
+
+func (lv *ListValue) First() *ValueElem
+
+func (lv *ListValue) Next(l *ValueElem) *ValueElem
+
+func NewPathBuilder() *PathBuilder
+
+func (p *PathString) Next() Path
+
+func (p *PathNb) Next() Path
+
+func (pb *PathBuilder) PushPathString(s string) *PathBuilder
+
+func (pb *PathBuilder) PushPathNb(n int) *PathBuilder
+
+func (pb *PathBuilder) GetPath() Path
+
+func (ts *errorT) Error(mes string, pos *PosT, path Path)
+
+func (ts *errorT) MappedError(mes, aux1, aux2 string, pos *PosT, path Path)
+
+func PrintDocument(w io.Writer, doc *Document)
+
+func Compile(r io.Reader) (*Document, Response)
+
+func ReadString(s string) (*Document, Response) // *ErrorElem
+
+type (
+	
+	// LinkGQL(name) returns the ReadCloser corresponding to name
+	LinkGQL func(name string) io.ReadCloser
+
+)
+
+func ReadGraphQL(name string) (*Document, Response) // *ErrorElem
+
+func DecodeString(s string) string
+
+func GetObjectValueInputField(ov *InputObjectValue, name string, value *Value) bool
+
+func ExecutableDefinitions(doc *Document) bool
+
+func GetValue(argumentValues *A.Tree, name string, v *Value) bool // *ValMapItem
+
+func MakeIntValue(n int) *IntValue
+
+func MakeInt64Value(n int64) *IntValue
+
+func MakeFloat32Value(f float32) *FloatValue
+
+func MakeFloat64Value(f float64) *FloatValue
+
+func MakeStringValue(s string) *StringValue
+
+func MakeEnumValue(s string) *EnumValue
+
+func MakeNullValue() *NullValue
+
+func MakeBooleanValue(b bool) *BooleanValue
+
+func (rs *ResponseStream) FixResponseStream(s ResponseStreamer)
+
+func Unsubscribe(responseStream *ResponseStream)
+
+func SetDir(td TypeDirectory)
+
+// JSON -> graphQL
+func TransVal(value J.Value) Value
+
+func InsertJsonValue(t *A.Tree, name string, value J.Value) bool // *ValMapItem
+
+// SetLGQL sets the current LinkGQL function and returns the previous one
+func SetLGQL(lG LinkGQL) LinkGQL
+
+func SetRComp(rComp io.Reader)
+
+func ResponseToJson(r Response) J.Json
+
+func (doc *Document) GetString() string
+
+func (doc *Document) GetFlatString() string
+
+func (doc *Document) Write(w io.Writer)
+
+func (doc *Document) WriteFlat(w io.Writer)
+
+func GetValueString(v Value) string
+
+func GetValueFlatString(v Value) string
+
+func WriteValue(w io.Writer, v Value)
+
+func WriteValueFlat(w io.Writer, v Value)
+
+func Wrap(i ...interface{}) *OutputObjectValue
+
+func Unwrap(rootValue *OutputObjectValue, n int) interface{}

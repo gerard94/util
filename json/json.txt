@@ -1,0 +1,244 @@
+package json
+
+const (
+	
+	//Json
+	ObjectKind	= iota
+	ArrayKind
+
+)
+
+const (
+	
+	//Value
+	JsonKind	= iota
+	StringKind
+	IntegerKind
+	FloatKind
+	BoolKind
+	NullKind
+
+)
+
+type (
+	
+	
+	// Outputs of ReadString, ReadText && ReadFile
+	
+	// A Json may be an 'Object' or an 'Array'
+	Json	interface {
+		
+		JKind() int
+		
+		GetObject() *Object
+		
+		GetArray() *Array
+		
+		// 'GetString' returns a formatted string for reading
+		GetString() string
+		
+		// 'GetFlatString' returns a compact string
+		GetFlatString() string
+		
+		// 'Write' writes 'GetString()' to 'w'
+		Write(w io.Writer)
+		
+		// 'WriteFlat' writes 'GetFlatString' to 'w'
+		WriteFlat(w io.Writer)
+	}
+	
+	//Json
+	Object	struct {
+		Fields Fields
+	}
+	
+	Fields	[]Field
+	
+	Field	struct {
+		Name	string
+		Value	Value
+	}
+	
+	//Json
+	Array	struct {
+		Elements Values
+	}
+	
+	Values	[]Value
+	
+	Value	interface {
+		VKind() int
+	}
+	
+	//Value
+	JsonVal	struct {
+		Json Json
+	}
+	
+	//Value
+	String	struct {
+		S string
+	}
+	
+	//Value
+	Integer	struct {
+		N int64
+	}
+	
+	//Value
+	Float	struct {
+		F float64
+	}
+	
+	//Value
+	Bool	struct {
+		Bool bool
+	}
+	
+	//Value
+	Null	struct {
+	}
+	
+	// A 'Maker' builds Json by stack manipulation
+	Maker struct {
+	}
+	
+	ReadSeekCloser interface {
+		io.ReadCloser
+		io.Seeker
+	}
+
+)
+
+func (*Object) JKind () int
+
+func (*Array) JKind () int
+
+func (*JsonVal) VKind () int
+
+func (*String) VKind () int
+
+func (*Integer) VKind () int
+
+func (*Float) VKind () int
+
+func (*Bool) VKind () int
+
+func (*Null) VKind () int
+
+func (o *Object) GetObject () *Object
+
+func (o *Object) GetArray () *Array
+
+func (a *Array) GetObject () *Object
+
+func (a *Array) GetArray () *Array
+
+func GetValue (o *Object, name string) (Value, bool)
+
+func GetLength (a *Array) int
+
+func GetElem (a *Array, num int) (Value, bool)
+
+func GetJson (v Value) (Json, bool)
+
+func GetString (v Value) (string, bool)
+
+func GetInt (v Value) (int64, bool)
+
+func GetFloat (v Value) (float64, bool)
+
+func GetBool (v Value) (bool, bool)
+
+func GetNull (v Value) bool
+
+// 'Compile' builds a Json from an 'io.ReadSeeker'
+func Compile (rs io.ReadSeeker) Json
+
+// string -> Json
+func ReadString (s string) Json
+
+// ReadSeekCloser -> Json
+func ReadRSC (rsc ReadSeekCloser) Json
+
+// os.File -> Json
+func ReadFile (path string) Json
+
+// ApplyTo modifies 'obj' according to 'j'; warning: 'obj' must be a pointer to a global, exported and modifiable record variable of its module, and only its exported and modifiable fields are taken into account.
+func ApplyTo (j Json, obj interface{}) bool
+
+func (o *Object) GetString () string
+
+func (a *Array) GetString () string
+
+func (o *Object) GetFlatString () string
+
+func (a *Array) GetFlatString () string
+
+func (o *Object) Write (w io.Writer)
+
+func (a *Array) Write (w io.Writer)
+
+func (o *Object) WriteFlat (w io.Writer)
+
+func (a *Array) WriteFlat (w io.Writer)
+
+func DecodeString (s string) string
+
+// 'StartObject' begins a json object
+func (m *Maker) StartObject ()
+
+// 'StartArray' begins a json array
+func (m *Maker) StartArray ()
+
+// 'PushString' pushes the string 's' on the stack
+func (m *Maker) PushString (s string)
+
+// 'PushInteger' pushes the integer 'n' on the stack
+func (m *Maker) PushInteger (n int64)
+
+// 'PushReal' pushes the float 'f' on the stack
+func (m *Maker) PushFloat (f float64)
+
+// 'PushBoolean' pushes the boolean 'b' on the stack
+func (m *Maker) PushBoolean (b bool)
+
+// 'PushNull' pushes a json null value on the stack
+func (m *Maker) PushNull ()
+
+// 'PushValue' pushes the value 'v' on the stack
+func (m *Maker) PushValue (v Value)
+
+// 'PushJson' pushes the Json 'j' on the stack
+func (m *Maker) PushJson (j Json)
+
+// 'PushField' pushes the field 'f' on the stack
+func (m *Maker) PushField (f *Field)
+
+// 'BuildField' builds the json object field whose name is 'name' and whose value is the last element on the stack and replaces this element with the built field
+func (m *Maker) BuildField (name string)
+
+// 'BuildObject' builds a json object from all the fields stacked from the last 'StartObject' call and stacks it
+func (m *Maker) BuildObject ()
+
+// 'BuildArray' builds a json array from all the values stacked from the last 'StartArray' call and stacks it
+func (m *Maker) BuildArray ()
+
+// stack[1] <- stack[n]
+func (m *Maker) Roll (n int)
+
+// stack[n] <- stack[1]
+func (m *Maker) RollD (n int)
+
+// stack[2] <-> stack[1]
+func (m *Maker) Swap ()
+
+// GetJson builds and returns a Json built from the last object on the stack
+func (m *Maker) GetJson () Json
+
+func NewMaker () *Maker
+
+// BuildJsonFrom builds and returns a Json describing obj; warning: obj must be nil or a pointer to a global exported struct variable of its package, and only its exported fields are taken into account
+func BuildJsonFrom (obj interface{}) Json
+
+func SetRComp (rComp io.Reader)

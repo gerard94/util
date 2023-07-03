@@ -598,7 +598,7 @@ func ReadFile (path string ) Json {
 	return ReadRSC(f)
 } //ReadFile
 
-// ApplyTo modifies obj according to j; warning: obj must be a pointer to a global, exported and modifiable record variable of its module, and only its exported and modifiable fields are taken into account; in obj, records must not be extended (i.e. their static types must match their dynamic types), but pointers to arrays, if their lengths are not already correct, are allocated with the same length as in j, provided that their BaseTyp is in {(Meta) boolTyp, sCharTyp, charTyp, byteTyp, sIntTyp, intTyp, sRealTyp, realTyp, longTyp, recTyp} (in particular, no pointers; if you want pointers, replace them by records with a pointer field).
+// ApplyTo modifies 'obj' according to 'j'; warning: 'obj' must be a pointer to a global, exported and modifiable record variable of its module, and only its exported and modifiable fields are taken into account.
 func ApplyTo (j Json, obj interface{}) bool {
 	buf := new(strings.Builder)
 	j.Write(buf)
@@ -749,7 +749,6 @@ func (o *Object) GetString () string {
 	return buf.String()
 } //GetString
 
-// Write writes a with w
 func (a *Array) GetString () string {
 	M.Assert(a != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -757,7 +756,6 @@ func (a *Array) GetString () string {
 	return buf.String()
 } //GetString
 
-// Write writes o with w
 func (o *Object) GetFlatString () string {
 	M.Assert(o != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -765,7 +763,6 @@ func (o *Object) GetFlatString () string {
 	return buf.String()
 } //GetFlatString
 
-// Write writes a with w
 func (a *Array) GetFlatString () string {
 	M.Assert(a != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -773,22 +770,22 @@ func (a *Array) GetFlatString () string {
 	return buf.String()
 } //GetFlatString
 
-// Write writes o with w
+// 'Write' writes 'o' with 'w'
 func (o *Object) Write (w io.Writer) {
 	writeJson(w, o, false, 0)
 } //Write
 
-// Write writes a with w
+// 'Write' writes 'a' with 'w'
 func (a *Array) Write (w io.Writer) {
 	writeJson(w, a, false, 0)
 } //Write
 
-// WriteFlat writes o with w
+// 'WriteFlat' writes 'o' with 'w'
 func (o *Object) WriteFlat (w io.Writer) {
 	writeJson(w, o, true, 0)
 } //WriteFlat
 
-// WriteFlat writes a with w
+// 'WriteFlat' writes 'a' with 'w'
 func (a *Array) WriteFlat (w io.Writer) {
 	writeJson(w, a, true, 0)
 } //WriteFlat
@@ -878,64 +875,64 @@ func (m *Maker) pull () stacker {
 	return s
 }
 
-//StartObject begins a json object
+// 'StartObject' begins a json object
 func (m *Maker) StartObject () {
 	m.push(new(startObj))
 }
 
-// StartArray begins a json array
+// 'StartArray' begins a json array
 func (m *Maker) StartArray () {
 	m.push(new(startArr));
 }
 
-// PushString pushes the string s on the stack
+// 'PushString' pushes the string 's' on the stack
 func (m *Maker) PushString (s string) {
 	m.push(&stValue{val: &String{s}})
 }
 
-// PushInteger pushes the integer n on the stack
+// 'PushInteger' pushes the integer 'n' on the stack
 func (m *Maker) PushInteger (n int64) {
 	m.push(&stValue{val: &Integer{n}})
 }
 
-// PushReal pushes the float f on the stack
+// 'PushReal' pushes the float 'f' on the stack
 func (m *Maker) PushFloat (f float64) {
 	m.push(&stValue{val: &Float{f}})
 }
 
-// PushBoolean pushes the boolean b on the stack
+// 'PushBoolean' pushes the boolean 'b' on the stack
 func (m *Maker) PushBoolean (b bool) {
 	m.push(&stValue{val: &Bool{b}})
 }
 
-// PushNull pushes a json null value on the stack
+// 'PushNull' pushes a json null value on the stack
 func (m *Maker) PushNull () {
 	m.push(&stValue{val: new(Null)})
 }
 
-// PushValue pushes the value v on the stack
+// 'PushValue' pushes the value 'v' on the stack
 func (m *Maker) PushValue (v Value) {
 	m.push(&stValue{val: v})
 }
 
-// PushJson pushes the Json j on the stack
+// 'PushJson' pushes the Json 'j' on the stack
 func (m *Maker) PushJson (j Json) {
 	m.push(&stValue{val: &JsonVal{j}})
 }
 
-// PushField pushes the field f on the stack
+// 'PushField' pushes the field 'f' on the stack
 func (m *Maker) PushField (f *Field) {
 	m.push(&stField{name: f.Name, value: f.Value})
 }
 
-// BuildField builds the json object field whose name is name and whose value is the last element on the stack and replaces this element with the built field
+// 'BuildField' builds the json object field whose name is 'name' and whose value is the last element on the stack and replaces this element with the built field
 func (m *Maker) BuildField (name string) {
 	s, ok := m.pull().(*stValue)
 	M.Assert(ok, 100)
 	m.push(&stField{name: name, value: s.val})
 }
 
-// BuildObject builds a json object from all the fields stacked from the last StartObject call and stacks it
+// 'BuildObject' builds a json object from all the fields stacked from the last 'StartObject' call and stacks it
 func (m *Maker) BuildObject () {
 	s := m.stk
 	n := 0
@@ -967,7 +964,7 @@ func (m *Maker) BuildObject () {
 	m.push(&stValue{val: &JsonVal{o}})
 }
 
-// BuildArray builds a json array from all the values stacked from the last StartArray call and stacks it
+// 'BuildArray' builds a json array from all the values stacked from the last 'StartArray' call and stacks it
 func (m *Maker) BuildArray () {
 	s := m.stk
 	n := 0
@@ -998,6 +995,7 @@ func (m *Maker) BuildArray () {
 	m.push(&stValue{val: &JsonVal{a}})
 }
 
+// stack[1] <- stack[n]
 func (m *Maker) Roll (n int) {
 	M.Assert(n >= 1, 20)
 	s := m.stk
@@ -1013,6 +1011,7 @@ func (m *Maker) Roll (n int) {
 	}
 }
 
+// stack[n] <- stack[1]
 func (m *Maker) RollD (n int) {
 	M.Assert(n >= 1, 20)
 	s := m.stk
@@ -1028,6 +1027,7 @@ func (m *Maker) RollD (n int) {
 	}
 }
 
+// stack[2] <-> stack[1]
 func (m *Maker) Swap () {
 	m.Roll(2)
 }
