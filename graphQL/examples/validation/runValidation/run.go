@@ -7,6 +7,7 @@ import (
 	V	"git.duniter.org/gerard94/util/graphQL/examples/validation"
 		"fmt"
 		"os"
+	_	"git.duniter.org/gerard94/util/graphQL/static"
 
 )
 

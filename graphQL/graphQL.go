@@ -38,6 +38,7 @@ import (
 
 const (
 	
+	// Characters used in 'compilationer.Execution.MakeString' and in 'trans'
 	double_quote = 0x22
 	reverse_solidus = 0x5C
 	solidus = 0x2F
@@ -159,12 +160,7 @@ type (
 		err *A.Tree	// *ErrorElem
 	}
 	
-	Location struct {
-		Pos,
-		Line,
-		Column int
-	}
-	
+	// Path of an error in data structure
 	Path interface {
 		Next () Path
 		setNext (p Path)
@@ -180,13 +176,16 @@ type (
 		N int
 	}
 	
+	// Queue
 	PathBuilder struct {
 		end Path
 	}
 	
 	ErrorElem struct {
 		Message string
-		Location *Location
+		// Location in the compiled text
+		Location *PosT
+		// Path in the data structure
 		Path Path
 	}
 	
@@ -194,7 +193,8 @@ type (
 		name () string
 	}
 	
-	NameMapItem struct {
+	// Base type of elements of an avl tree
+	NameMapItem struct { // namedItem
 		Name *StrPtr
 	}
 	
@@ -218,6 +218,7 @@ type (
 		field *FieldDefinition
 	}
 	
+	// Chained list
 	fieldList struct {
 		next *fieldList
 		field *Field
@@ -232,6 +233,7 @@ type (
 		fields *fields
 	}
 	
+	// Double chained ring
 	fieldRing struct {
 		next, prev *fieldRing
 		field *Field
@@ -267,15 +269,17 @@ type (
 		stream StreamResolver
 	}
 	
+	// A 'ScalarCoercer' tries to coerce 'v' to a scalar value *'cV' valid for this coercer. If success, 'ScalarCoercer' returns true; otherwise, an error is raised in 'ts' with the path 'path' and 'ScalarCoercer' returns false
 	ScalarCoercer func (ts TypeSystem, v Value, path Path, cV *Value) bool
 	
 	TypeDirectory interface {
 		NewTypeSystem (sc Scalarer) TypeSystem
 	}
 	
-	typeDirectory struct {
+	typeDirectory struct { //TypeDirectory
 	}
 	
+	// Set of errors in the compiled text 'source'
 	errorT struct {
 		source string
 		errors *A.Tree // *ErrorElem
@@ -318,8 +322,8 @@ type (
 		abstractTypeResolver AbstractTypeResolver
 		desc *StringValue
 		root [3]*ObjectTypeDefinition
-		verifNotIntro,
-		markUnknowDefError bool
+		verifNotIntro, // Used when dealing with intro names to avoid erroneous errors
+		markUnknowDefError bool // Used in 'typeSystem.collectNames' to avoid erroneous errors
 	}
 	
 	execSystem struct {
@@ -635,7 +639,7 @@ type (
 	}
 	
 	ListValue struct { // Value
-		n int
+		n int // Number of elements
 		endL *ValueElem // Queue
 	}
 	
@@ -999,16 +1003,16 @@ func (err1 *ErrorElem) Compare (err2 A.Comparer) A.Comp {
 		return A.Gt
 	}
 	if err1.Location != nil && er2.Location != nil {
-		if err1.Location.Line < er2.Location.Line {
+		if err1.Location.L < er2.Location.L {
 			return A.Lt
 		}
-		if err1.Location.Line > er2.Location.Line {
+		if err1.Location.L > er2.Location.L {
 			return A.Gt
 		}
-		if err1.Location.Column < er2.Location.Column {
+		if err1.Location.C < er2.Location.C {
 			return A.Lt
 		}
-		if err1.Location.Column > er2.Location.Column {
+		if err1.Location.C > er2.Location.C {
 			return A.Gt
 		}
 	}
@@ -1057,6 +1061,7 @@ func (err1 *ErrorElem) Compare (err2 A.Comparer) A.Comp {
 	return A.Eq
 } //Compare
 
+// Returns a new empty fieldring
 func newEmptyRing () *fieldRing {
 	fr := new(fieldRing)
 	fr.next = fr
@@ -1064,6 +1069,7 @@ func newEmptyRing () *fieldRing {
 	return fr
 } //newEmptyRing
 
+// Returns a new fieldring containing one Field: 'f'
 func newFieldRing (f *Field) *fieldRing {
 	fr := new(fieldRing)
 	ff := new(fieldRing)
@@ -1073,6 +1079,7 @@ func newFieldRing (f *Field) *fieldRing {
 	return fr
 } //newFieldRing
 
+// Appends the content of 'new' (without 'new' itself) at the end of 'to'
 func appendRing (to, new *fieldRing) {
 	new.prev.next = to
 	new.next.prev = to.prev
@@ -1105,6 +1112,8 @@ func MakeAnyValue (any AnyPtr) *AnyValue {
 	return &AnyValue{Any: any}
 } //MakeAnyValue
 
+// Management of InputObjectValue as a chained list
+
 func newInputObjectValue () *InputObjectValue {
 	return &InputObjectValue{inputFields: nil}
 } //newInputObjectValue
@@ -1123,10 +1132,13 @@ func (*InputObjectValue) Next (f *ObjectField) *ObjectField {
 	return f.next
 } //Next
 
+// Management of OutputObjectValue as a queue
+
 func NewOutputObjectValue () *OutputObjectValue {
 	return &OutputObjectValue{outputFields: nil}
 } //NewOutputObjectValue
 
+// Inserts a new 'ObjectField' at the end of the queue and returns it
 func (ov *OutputObjectValue) insertOutputField (name *StrPtr, value Value) *ObjectField {
 	f := &ObjectField{Name: name, Value: value}
 	if ov.outputFields == nil {
@@ -1140,6 +1152,7 @@ func (ov *OutputObjectValue) insertOutputField (name *StrPtr, value Value) *Obje
 	return f
 } //insertOutputField
 
+// Exported variant of 'insertOutputField' using string instead of *StrPtr
 func (ov *OutputObjectValue) InsertOutputField (name string, value Value) *ObjectField {
 	return ov.insertOutputField(makeName(name), value)
 } //InsertOutputField
@@ -1159,6 +1172,8 @@ func (ov *OutputObjectValue) Next (f *ObjectField) *ObjectField {
 	}
 	return f.next
 } //Next
+
+//Management of ListValue as a queue
 
 func NewListValue () *ListValue {
 	return &ListValue{n: 0, endL: nil}
@@ -1307,11 +1322,11 @@ func (ts *errorT) Error (mes string, pos *PosT, path Path) {
 	if pos == nil {
 		el.Location = nil
 	} else {
-		el.Location = &Location{Pos: pos.P, Line: pos.L, Column: pos.C}
+		el.Location = &PosT{P: pos.P, L: pos.L, C: pos.C}
 	}
 	el.Path = path
 	ts.GetErrors().SearchIns(el)
-	ts.GetErrors().SearchIns(&ErrorElem{Message: ts.GetSource(), Location: &Location{Pos: -1}, Path: nil})
+	ts.GetErrors().SearchIns(&ErrorElem{Message: ts.GetSource(), Location: &PosT{P: -1}, Path: nil})
 } //Error
 
 func (ts *errorT) MappedError (mes, aux1, aux2 string, pos *PosT, path Path) {
@@ -1327,7 +1342,7 @@ func (comp *compilationer) Error (p, li, co int, mes string) {
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr, "Error:", li, ":", co, ":", mes)
 	} else {
-		_, b, _ := comp.err.SearchIns(&ErrorElem{Location: &Location{Pos: p - 1, Line: li, Column: co}, Message: mes})
+		_, b, _ := comp.err.SearchIns(&ErrorElem{Location: &PosT{P: p - 1, L: li, C: co}, Message: mes})
 		M.Assert(!b, li, co, mes, 100)
 	}
 } //Error
@@ -2402,10 +2417,12 @@ func DecodeString (s string) string {
 
 // ************** Validation ************
 
+// Introspection name ?
 func isIntro (name *StrPtr) bool {
 	return strings.Index(name.S, "__") == 0
 } //isIntro
 
+// Verifies that 'name' is not an introspection name, but only if 'ts.verifNotIntro', ie when dealing with intro names
 func (ts *typeSystem) verifyNotIntro (name *StrPtr) {
 	if ts.verifNotIntro && isIntro(name) {
 		ts.internError("IntroName", name.S, "", name.P, nil)
@@ -2449,6 +2466,7 @@ func (ts *typeSystem) getTypeDefinition (name *StrPtr) TypeDefinition {
 	return nil
 } //getTypeDefinition
 
+// Exported version of 'getTypeDefinition', using string instead of *StrPtr
 func (ts *typeSystem) GetTypeDefinition (name string) TypeDefinition {
 	return ts.getTypeDefinition(makeName(name))
 } //GetTypeDefinition
@@ -2551,6 +2569,7 @@ func GetObjectValueInputField (ov *InputObjectValue, name string, value *Value) 
 	return getObjectValueInputField(ov, makeName(name), value)
 } //GetObjectValueInputField
 
+// Verifies the structural equality of input values 'v1' and 'v2'
 func equalValues (v1, v2 Value) bool {
 	switch v1 := v1.(type) {
 	case *Variable:
@@ -2750,6 +2769,7 @@ func ExecutableDefinitions (doc *Document) bool {
 	return true
 } //ExecutableDefinitions
 
+// Operation Name Uniqueness: the names of all named operation must be unique in 'doc'
 func (ts *typeSystem) validateOperationNameUniqueness (doc *Document) *A.Tree { // *defMapItem
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -2767,6 +2787,7 @@ func (ts *typeSystem) validateOperationNameUniqueness (doc *Document) *A.Tree { 
 	return t
 } //validateOperationNameUniqueness
 
+// Lone Anonymous Operation: if 'doc' contains an anonymous operation, it must contain no other operation
 func (ts *typeSystem) validateLoneAnonymousOperation (doc *Document) {
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -2788,6 +2809,7 @@ func (ts *typeSystem) validateLoneAnonymousOperation (doc *Document) {
 	}
 } //validateLoneAnonymousOperation
 
+// DoesFragmentTypeApply (spec 6, Execution)
 func (ts *typeSystem) doesFragmentTypeApply (objectType *ObjectTypeDefinition, fragmentType *NamedType) bool {
 
 	Implements := func (ot *ObjectTypeDefinition, it *InterfaceTypeDefinition) bool {
@@ -2839,6 +2861,7 @@ func getVarValue (variableValues *A.Tree, name *StrPtr, value *Value) bool { // 
 	return false
 } //getVarValue
 
+// CollectFields (spec 6, Execution)
 func (es *execSystem) collectFields (objectType *ObjectTypeDefinition, selectionSet SelectionSet, variableValues, visitedFragments *A.Tree) *orderedFieldsMap { // *ValMapItem, *NameMapItem
 	
 	If := func (a Arguments, name *StrPtr) bool {
@@ -2942,6 +2965,7 @@ func (es *execSystem) collectFields (objectType *ObjectTypeDefinition, selection
 	return groupedFields
 } //collectFields
 
+// Single root field (Subscription): Subscription operations must have exactly one root field
 func (es *execSystem) validateSubscriptionSingleRootField (doc *Document) {
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -3024,6 +3048,7 @@ func (ts *typeSystem) walkProcSel (typ *NamedType, set SelectionSet) {
 	}
 } //walkProcSel
 
+// Fields: Field Selections: The target field of a field selection must be defined on the scoped type of the selection set (À vérifier)
 func (ts *typeSystem) validateScopedTargetFields (doc *Document) {
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -3067,6 +3092,7 @@ func (es *execSystem) buildSetMap (setMap *A.Tree, set SelectionSet) { // *field
 	}
 } //buildSetMap
 
+// SameResponseShape (spec 5)
 func (es *execSystem) sameResponseShape (fieldA, fieldB *Field) bool {
 	typeA := fieldA.returnType
 	typeB := fieldB.returnType
@@ -3126,6 +3152,7 @@ func (es *execSystem) sameResponseShape (fieldA, fieldB *Field) bool {
 	return true
 } //sameResponseShape
 
+// FieldsInSetCanMerge (spec 5)
 func (es *execSystem) fieldsInSetCanMerge (set *A.Tree) { // *fieldMapItem
 	
 	EqualArgs := func (argsA, argsB Arguments) bool {
@@ -3194,6 +3221,7 @@ func (es *execSystem) allFieldsWalk (set SelectionSet) {
 	}
 } //allFieldsWalk
 
+// Field Selection Merging: any two field selections which might both be encountered for the same object are only valid if they are equivalent
 func (es *execSystem) validateAllFieldsCanMerge (doc *Document) {
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -3237,6 +3265,7 @@ func (ts *typeSystem) leafFieldsWalk (set SelectionSet) {
 	}
 } //leafFieldsWalk
 
+// Leaf Field Selections: field selections on scalars or enums are never allowed, they are mandatory on interface, union, or object
 func (ts *typeSystem) validateLeafFieldSelections (doc *Document) {
 	M.Assert(doc != nil, 20)
 	ds := doc.Defs
@@ -3253,6 +3282,7 @@ func (ts *typeSystem) validateLeafFieldSelections (doc *Document) {
 
 // Validation: All Variable Usages are Allowed
 // Is variable type 'vt' compatible with the location type 'lt'?
+// AreTypesCompatible (spec 5)
 func areTypesCompatible (vt, lt Type) bool {
 	ltn, bn := lt.(*NonNullType)
 	if bn {
@@ -3492,6 +3522,7 @@ func (ts *typeSystem) validateArgumentValuesCoercion (argumentValues Arguments, 
 	}
 } //validateArgumentValuesCoercion
 
+// Arguments: Argument Names (Every argument provided to a field or directive must be defined in the set of possible arguments of that field or directive); Argument Uniqueness (Every argument names in an argument set must be different)
 func (ts *typeSystem) validateArgs (asf ArgumentsDefinition, as Arguments, parentName *StrPtr) {
 	for i := 0; i < len(as); i++ {
 		name := as[i].Name
@@ -3617,12 +3648,13 @@ func (es *execSystem) argumentNamesSetWalkR (set SelectionSet, vd VariableDefini
 	}
 } //argumentNamesSetWalkR
 
+// Required Arguments (In fields and directives, if an argument is required -- non-null and no default value -- il must exist and not be null)
 func (es *execSystem) validateRequiredArguments (doc *Document) {
 	
 	ValidateVariableDefinitions := func (vd VariableDefinitions) {
 		for _, v := range vd {
 			value := v.DefVal
-			if (value != nil) && !es.isConstInputValueCoercibleToType(value, nil, v.Type, nil) {
+			if value != nil && !es.isConstInputValueCoercibleToType(value, nil, v.Type, nil) {
 				es.internError("DefValIncoercibleToTypeIn", v.Var.S, "", v.Var.P, nil)
 			}
 		}
@@ -4116,6 +4148,7 @@ func (ts *typeSystem) validateDirectives (doc *Document) {
 	}
 } //validateDirectives
 
+// IsVariableUsageAllowed (spec 5)
 func isVariableUsageAllowed (variableDefinition *VariableDefinition, variableUsage *InputValueDefinition, locationType Type) bool {
 	variableType := variableDefinition.Type
 	variableDefaultValue := variableDefinition.DefVal
@@ -4267,6 +4300,7 @@ func (es *execSystem) walkSelectionSet (parentType TypeDefinition, set Selection
 	}
 } //walkSelectionSet
 
+// Variables: Variable Uniqueness (only one occurrence of every variable name in any operation), Variables Are Input Types, All Variable Uses Defined (all used variables in an operation, or, transitively, in one of its fragments, must be declared in the operation), All Variables Used (all variables defined in an operation must be used in this operarion or, transitively, in at least one its fragments), All Variable Usages are Allowed (variable usages must be compatible with the arguments they are passed to) (À vérifier)
 func (es *execSystem) validateVariables (doc *Document) {
 
 	VerifyVariables := func (vds VariableDefinitions, varDefs *A.Tree) { // *varDefMapItem
@@ -4589,6 +4623,13 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 			ov := newInputObjectValue()
 			switch val := value.(type) {
 			case *InputObjectValue:
+				for f := val.First(); f != nil; f = val.Next(f) {
+					var fd *InputValueDefinition
+					if !getInputField(d.InFieldsDef, f.Name, &fd) {
+						ts.internError("IsNotFieldFor", f.Name.S, d.Name.S, f.Name.P, pathB.GetPath())
+						return false
+					}
+				}
 				argumentDefinitions := d.InFieldsDef
 				for _, argumentDefinition := range argumentDefinitions {
 					argumentName := argumentDefinition.Name
@@ -4608,7 +4649,6 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 					}
 					if !hasValue && defaultValue != nil {
 						if !ts.coerceValue(defaultValue,  argumentType, &coercedValue, &propag, variableDefinitions, variableValues, pathBB) {
-							ts.internError("UnableToCoerce", "", "", nil, pathBB.GetPath())
 							return false
 						}
 						ov.insertInputField(argumentName, coercedValue)
@@ -4621,7 +4661,6 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 							if isNull(value) {
 								ov.insertInputField(argumentName, value)
 							} else if !ts.coerceValue(value, argumentType, &coercedValue, &propag, variableDefinitions, variableValues, pathBB) {
-								ts.internError("UnableToCoerce", "", "", nil, pathBB.GetPath())
 								return false
 							} else {
 								ov.insertInputField(argumentName, coercedValue)
@@ -4691,7 +4730,7 @@ func (ts *typeSystem) coerceArgumentValues (objectType *ObjectTypeDefinition, fi
 		}
 		if !hasValue && defaultValue != nil {
 			if !ts.coerceValue(defaultValue,  argumentType, &coercedValue, &propag, variableDefinitions, variableValues, pathBB) {
-				ts.internError("UnableToCoerce", "", "", nil, pathBB.GetPath())
+				ts.internError("UnableToCoerce", argumentName.S, "", nil, pathBB.GetPath())
 			}
 			newEntry(coercedValues, argumentName, coercedValue)
 		} else {
@@ -4709,7 +4748,7 @@ func (ts *typeSystem) coerceArgumentValues (objectType *ObjectTypeDefinition, fi
 				if b {
 					newEntry(coercedValues, argumentName, value)
 				} else if !ts.coerceValue(value, argumentType, &coercedValue, &propag, variableDefinitions, variableValues, pathBB) {
-					ts.internError("UnableToCoerce", "", "", nil, pathBB.GetPath())
+					ts.internError("UnableToCoerce", argumentName.S, "", nil, pathBB.GetPath())
 				} else {
 					newEntry(coercedValues, argumentName, coercedValue)
 				}
@@ -5548,7 +5587,9 @@ func intCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 			return true
 		}
 	}
-	ts.internError("NotAnInteger", "", "", nil, path)
+	if path != nil {
+		ts.internError("NotAnInteger", "", "", nil, path)
+	}
 	return false
 } //intCoercer
 
@@ -5563,7 +5604,9 @@ func floatCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 		*cV = v;
 		return true
 	}
-	ts.internError("NotAFloat", "", "", nil, path)
+	if path != nil {
+		ts.internError("NotAFloat", "", "", nil, path)
+	}
 	return false
 } //floatCoercer
 
@@ -5573,7 +5616,9 @@ func stringCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 		*cV = v
 		return true
 	}
-	ts.internError("NotAString", "", "", nil, path)
+	if path != nil {
+		ts.internError("NotAString", "", "", nil, path)
+	}
 	return false
 } //stringCoercer
 
@@ -5583,7 +5628,9 @@ func booleanCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 		*cV = v
 		return true
 	}
-	ts.internError("NotABoolean", "", "", nil, path)
+	if path != nil {
+		ts.internError("NotABoolean", "", "", nil, path)
+	}
 	return false
 } //booleanCoercer
 
@@ -5596,7 +5643,9 @@ func idCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 		*cV = MakeStringValue(SC.Itoa(int(v.Int)))
 		return true
 	}
-	ts.internError("NotAnID", "", "", nil, path)
+	if path != nil {
+		ts.internError("NotAnID", "", "", nil, path)
+	}
 	return false
 } //idCoercer
 

@@ -77,7 +77,7 @@ func splitFirstDir (path string) (string, string) {
 	return first, rest
 }
 
-// Let 'path' = "origin/rest/...". If the current directory is in a module whose root directory is "<absolute path>/root", FindDir returns "<absolute path>/root/rsrc/rest/...". But, if this module is a descendant of a directory named 'src' and if several modules are contained in 'src' and if one of these modules has root == origin, then FindDir returns "<absolute path>/origin/rsrc/rest". If the current directory "<current absolute path>" is not in a module, FindDir returns "<current absolute path>/rsrc/origin/rest"
+// Let 'path' = "origin/rest/...". If the current directory is in a module whose root directory is "<absolute path>/root", FindDir(path) returns "<absolute path>/root/rsrc/rest/...". But, if this module is a descendant of a directory named 'src' and if several modules are contained in 'src' and if one of these modules has root == origin, then FindDir returns "<src absolute path>/.../origin/rsrc/rest". If the current directory "<current absolute path>" is not in a module, FindDir returns "<current absolute path>/rsrc/origin/rest"
 func FindDir (path string) string {
 	var r string
 	root, src := inSrc()

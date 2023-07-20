@@ -35,12 +35,6 @@ type (
 	
 	StrArray	[]string
 	
-	Location	struct {
-		Pos,
-		Line,
-		Column int
-	}
-	
 	Path	interface {
 		Next() Path
 	}
@@ -58,7 +52,7 @@ type (
 	
 	ErrorElem	struct {
 		Message		string
-		Location	*Location
+		Location	*PosT
 		Path		Path
 	}
 	
@@ -627,6 +621,14 @@ func GetValueFlatString(v Value) string
 func WriteValue(w io.Writer, v Value)
 
 func WriteValueFlat(w io.Writer, v Value)
+
+func GetTypeString(t Type) string
+
+func GetTypeFlatString(t Type) string
+
+func WriteType(w io.Writer, t Type)
+
+func WriteTypeFlat(w io.Writer, t Type)
 
 func Wrap(i ...interface{}) *OutputObjectValue
 

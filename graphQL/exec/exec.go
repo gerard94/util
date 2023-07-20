@@ -70,7 +70,7 @@ func printErrors (w io.Writer, errors *A.Tree) {
 		el := e.Val().(*G.ErrorElem)
 		fmt.Fprint(w, el.Message)
 		if el.Location != nil {
-			fmt.Fprint(w, " at ", el.Location.Line, ":", el.Location.Column)
+			fmt.Fprint(w, " at ", el.Location.L, ":", el.Location.C)
 		}
 		p := el.Path
 		if p != nil {
