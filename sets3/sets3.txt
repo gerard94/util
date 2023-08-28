@@ -1,0 +1,68 @@
+package sets3
+
+// The module "util/sets3" implements the type Set, a set of strings, represented by A.Tree(s) of Elem(s).
+
+type (
+	
+	Elem	string
+
+	Set	A.Tree
+
+	SetIterator	struct {
+	}
+
+)
+
+// Creates and returns a new empty set.
+func NewSet() *Set
+
+// Tests whether s is empty.
+func (s *Set) IsEmpty() bool
+
+// Return the number of elements in s
+func (s *Set) NbElems() int
+
+// Creates and returns a deep copy of s.
+func (s *Set) Copy() *Set
+
+// Puts in s1 the union of s1 and s2
+func (s1 *Set) Add(s2 *Set)
+
+// Returns the union of s1 and s2.
+func (s1 *Set) Union(s2 *Set) *Set
+
+// Returns the intersection of s1 and s2.
+func (s1 *Set) Inter(s2 *Set) *Set
+
+// Returns the difference between s1 and s2.
+func (s1 *Set) Diff(s2 *Set) *Set
+
+// Returns the exclusive union of s1 and s2.
+func (s1 *Set) XOR(s2 *Set) *Set
+
+// Includes the string st in the set s.
+func (s *Set) Incl(st string) (didInclude bool)
+
+// Excludes the string st from the set s.
+func (s *Set) Excl(st string) (didExclude bool)
+
+// Tests whether the string st is included in the set s.
+func (s *Set) In(st string) bool
+
+// Tests whether s1 = s2.
+func (s1 *Set) Equal(s2 *Set) bool
+
+// Tests whether s1 is a subset of s2.
+func (s1 *Set) Subset(s2 *Set) bool
+
+// Return the element of 's' of rank 'rank' (from 0) in lexicographic order
+func (s *Set) ElemOfRank (rank int) string
+
+// Attach the set s to a SetIterator and return the later.
+func (s *Set) Attach() *SetIterator
+
+// On return, e contains the first element of the set attached to i. Returns true in ok if such an element exists. Usage: for e, ok := i.FirstE(); ok; e, ok = i.NextE() { ... }
+func (i *SetIterator) FirstE() (e string, ok bool)
+
+// On return, e contains the next element of the set attached to i. Returns true in ok if such an element exists. i.FirstE must have been called once before i.NextE. Usage: for e, ok := i.FirstE(); ok; e, ok = i.NextE() { ... }
+func (i *SetIterator) NextE() (e string, ok bool)

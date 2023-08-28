@@ -24,7 +24,7 @@ import (
 type (
 	
 	// Result of a comparison.
-	Comp int8
+	Comp = int8
 	
 	// Type of function used by 'WalkThrough'; 'v' is the value of an element of tree, 'p' are parameters.
 	DoFunc func (v interface{}, p ...interface{})
@@ -779,6 +779,7 @@ func (t *Tree) Erase (rank int) {
 } //Erase
 
 // 'Find' finds and returns in 'res' the element at position 'rank' in the tree 't'; if the element does not exist, 'found' is false and 'res' returns nil.
+// The rank of the first element in a tree is 1.
 func (t *Tree) Find (rank int) (res *Elem, found bool) {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)

@@ -134,6 +134,8 @@ type (
 		P, L, C int
 	}
 	
+	PosList []*PosT
+	
 	// Aggregate of a string and of its position in compiled text
 	StrPtr struct {
 		P *PosT
@@ -183,8 +185,8 @@ type (
 	
 	ErrorElem struct {
 		Message string
-		// Location in the compiled text
-		Location *PosT
+		// Locations in the compiled text
+		Locations PosList
 		// Path in the data structure
 		Path Path
 	}
@@ -291,9 +293,9 @@ type (
 	
 	TypeSystem interface {
 		Scalarer
-		Error (mes string, pos *PosT, path Path)
-		MappedError (mes, aux1, aux2 string, pos *PosT, path Path)
-		internError (mes, aux1, aux2 string, pos *PosT, path Path)
+		Error (mes string, pos PosList, path Path)
+		MappedError (mes, aux1, aux2 string, pos PosList, path Path)
+		internError (mes, aux1, aux2 string, pos PosList, path Path)
 		GetErrors () *A.Tree // *ErrorElem
 		GetTypeDefinition (name string) TypeDefinition
 		FixFieldResolver (object, field string, resolver FieldResolver)
@@ -996,23 +998,33 @@ func (n *NameMapItem) Copy () A.Copier {
 
 func (err1 *ErrorElem) Compare (err2 A.Comparer) A.Comp {
 	er2 := err2.(*ErrorElem)
-	if err1.Location != nil && er2.Location == nil {
+	if err1.Locations == nil && er2.Locations != nil {
 		return A.Lt
 	}
-	if err1.Location == nil && er2.Location != nil {
+	if err1.Locations != nil && er2.Locations == nil {
 		return A.Gt
 	}
-	if err1.Location != nil && er2.Location != nil {
-		if err1.Location.L < er2.Location.L {
+	if err1.Locations != nil && er2.Locations != nil {
+		n := M.Min(len(err1.Locations), len(er2.Locations))
+		for i := 0; i < n; i++ {
+			l1 := err1.Locations[i]; l2 := er2.Locations[i]
+				if l1.L < l2.L {
+					return A.Lt
+				}
+				if l1.L > l2.L {
+					return A.Gt
+				}
+				if l1.C < l2.C {
+					return A.Lt
+				}
+				if l1.C > l2.C {
+					return A.Gt
+				}
+		}
+		if len(err1.Locations) < len(er2.Locations) {
 			return A.Lt
 		}
-		if err1.Location.L > er2.Location.L {
-			return A.Gt
-		}
-		if err1.Location.C < er2.Location.C {
-			return A.Lt
-		}
-		if err1.Location.C > er2.Location.C {
+		if len(err1.Locations) > len(er2.Locations) {
 			return A.Gt
 		}
 	}
@@ -1317,23 +1329,27 @@ func (pb *PathBuilder) GetPath () Path {
 	return pe
 } //GetPath
 
-func (ts *errorT) Error (mes string, pos *PosT, path Path) {
+func (ts *errorT) Error (mes string, pos PosList, path Path) {
 	el := &ErrorElem{Message: mes}
 	if pos == nil {
-		el.Location = nil
+		el.Locations = nil
 	} else {
-		el.Location = &PosT{P: pos.P, L: pos.L, C: pos.C}
+		el.Locations = make(PosList, len(pos))
+		for i, p := range pos {
+			M.Assert(p != nil, 20)
+			el.Locations[i] = &PosT{P: p.P, L: p.L, C: p.C}
+		}
 	}
 	el.Path = path
 	ts.GetErrors().SearchIns(el)
-	ts.GetErrors().SearchIns(&ErrorElem{Message: ts.GetSource(), Location: &PosT{P: -1}, Path: nil})
+	ts.GetErrors().SearchIns(&ErrorElem{Message: ts.GetSource(), Locations: PosList{&PosT{P: -1}}})
 } //Error
 
-func (ts *errorT) MappedError (mes, aux1, aux2 string, pos *PosT, path Path) {
+func (ts *errorT) MappedError (mes, aux1, aux2 string, pos PosList, path Path) {
 	ts.Error(lang.Map(mes, aux1, aux2), pos, path)
 } //MappedError
 
-func (ts *errorT) internError (mes, aux1, aux2 string, pos *PosT, path Path) {
+func (ts *errorT) internError (mes, aux1, aux2 string, pos PosList, path Path) {
 	ts.MappedError(ErrorPrefix + mes, aux1, aux2, pos, path)
 } //internError
 
@@ -1342,7 +1358,7 @@ func (comp *compilationer) Error (p, li, co int, mes string) {
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr, "Error:", li, ":", co, ":", mes)
 	} else {
-		_, b, _ := comp.err.SearchIns(&ErrorElem{Location: &PosT{P: p - 1, L: li, C: co}, Message: mes})
+		_, b, _ := comp.err.SearchIns(&ErrorElem{Locations: PosList{&PosT{P: p - 1, L: li, C: co}}, Message: mes})
 		M.Assert(!b, li, co, mes, 100)
 	}
 } //Error
@@ -2425,7 +2441,7 @@ func isIntro (name *StrPtr) bool {
 // Verifies that 'name' is not an introspection name, but only if 'ts.verifNotIntro', ie when dealing with intro names
 func (ts *typeSystem) verifyNotIntro (name *StrPtr) {
 	if ts.verifNotIntro && isIntro(name) {
-		ts.internError("IntroName", name.S, "", name.P, nil)
+		ts.internError("IntroName", name.S, "", PosList{name.P}, nil)
 	}
 } //verifyNotIntro
 
@@ -2461,7 +2477,7 @@ func (ts *typeSystem) getTypeDefinition (name *StrPtr) TypeDefinition {
 		}
 	}
 	if ts.markUnknowDefError {
-		ts.internError("UnknownType", name.S, "", name.P, nil)
+		ts.internError("UnknownType", name.S, "", PosList{name.P}, nil)
 	}
 	return nil
 } //getTypeDefinition
@@ -2655,7 +2671,7 @@ func (ts *typeSystem) getDirectiveDefinition (name *StrPtr) *DirectiveDefinition
 		}
 	}
 	if ts.markUnknowDefError {
-		ts.internError("UnknownDirective", name.S, "", name.P, nil)
+		ts.internError("UnknownDirective", name.S, "", PosList{name.P}, nil)
 	}
 	return nil
 } //getDirectiveDefinition
@@ -2666,7 +2682,7 @@ func (es *execSystem) getFragmentDefinition (name *StrPtr) *FragmentDefinition {
 			return d
 		}
 	}
-	es.internError("UnknownFragment", name.S, "", name.P, nil)
+	es.internError("UnknownFragment", name.S, "", PosList{name.P}, nil)
 	return nil
 } //getFragmentDefinition
 
@@ -2778,7 +2794,7 @@ func (ts *typeSystem) validateOperationNameUniqueness (doc *Document) *A.Tree { 
 		switch d := d.(type) {
 		case *OperationDefinition:
 			if _, b, _ := t.SearchIns(&defMapItem{NameMapItem{d.Name}, d}); b {
-				ts.internError("NotUniqueOperation", d.Name.S, "", d.Name.P, nil)
+				ts.internError("NotUniqueOperation", d.Name.S, "", PosList{d.Name.P}, nil)
 				return nil
 			}
 		default:
@@ -2867,9 +2883,9 @@ func (es *execSystem) collectFields (objectType *ObjectTypeDefinition, selection
 	If := func (a Arguments, name *StrPtr) bool {
 		if len(a) != 1 || a[0].Name.S != "if" {
 			if len(a) == 0 {
-				es.internError("NoArgumentIn", name.S, "", name.P, nil)
+				es.internError("NoArgumentIn", name.S, "", PosList{name.P}, nil)
 			} else {
-				es.internError("IncorrectArgumentIn", a[0].Name.S, name.S, name.P, nil)
+				es.internError("IncorrectArgumentIn", a[0].Name.S, name.S, PosList{name.P}, nil)
 			}
 			return false
 		}
@@ -2883,11 +2899,11 @@ func (es *execSystem) collectFields (objectType *ObjectTypeDefinition, selection
 				case *BooleanValue:
 					return valV.Boolean
 				default:
-					es.internError("IncorrectVarValue", name.S, "", name.P, nil)
+					es.internError("IncorrectVarValue", name.S, "", PosList{name.P}, nil)
 				}
 			}
 		default:
-			es.internError("IncorrectValueType", name.S, "", name.P, nil)
+			es.internError("IncorrectValueType", name.S, "", PosList{name.P}, nil)
 		}
 		return false
 	} //If
@@ -2984,7 +3000,7 @@ func (es *execSystem) validateSubscriptionSingleRootField (doc *Document) {
 					selectionSet := subscription.SelSet
 					groupedFieldSet := es.collectFields(subscriptionType, selectionSet, nil, nil)
 					if groupedFieldSet.t.NumberOfElems() != 1 {
-						es.internError("NotSingleSubscriptRoot", d.Name.S, "", d.Name.P, nil)
+						es.internError("NotSingleSubscriptRoot", d.Name.S, "", PosList{d.Name.P}, nil)
 					} else {
 						e, found := groupedFieldSet.t.Find(1); M.Assert(found, 100)
 						es.verifyNotIntro(e.Val().(*fieldRingElem).fr.next.field.Name)
@@ -2995,7 +3011,7 @@ func (es *execSystem) validateSubscriptionSingleRootField (doc *Document) {
 		}
 	}
 	if !isSubscriptionRoot {
-		es.internError("NoSubscriptionRoot", subscriptionName.S, "", subscriptionName.P, nil)
+		es.internError("NoSubscriptionRoot", subscriptionName.S, "", PosList{subscriptionName.P}, nil)
 	}
 } //validateSubscriptionSingleRootField
 
@@ -3009,7 +3025,7 @@ func (ts *typeSystem) proceedSelection (typ *NamedType, sel Selection) {
 			case *ObjectTypeDefinition:
 				f := getField(d.FieldsDef, sel.Name)
 				if f == nil {
-					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, sel.Name.P, nil)
+					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, PosList{sel.Name.P}, nil)
 				} else {
 					sel.returnType = f.Type
 					ts.walkProcSel(namedTypeOf(sel.returnType), sel.SelSet)
@@ -3017,18 +3033,18 @@ func (ts *typeSystem) proceedSelection (typ *NamedType, sel Selection) {
 			case *InterfaceTypeDefinition:
 				f := getField(d.FieldsDef, sel.Name)
 				if f == nil {
-					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, sel.Name.P, nil)
+					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, PosList{sel.Name.P}, nil)
 				} else {
 					sel.returnType = f.Type
 					ts.walkProcSel(namedTypeOf(sel.returnType), sel.SelSet)
 				}
 			case *UnionTypeDefinition:
 				if sel.Name.S != "__typename" {
-					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, sel.Name.P, nil)
+					ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, PosList{sel.Name.P}, nil)
 				}
 				sel.returnType = nil
 			default:
-				ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, sel.Name.P, nil)
+				ts.internError("IsNotFieldFor", sel.Name.S, typ.Name.S, PosList{sel.Name.P}, nil)
 				sel.returnType = nil
 			}
 		}
@@ -3060,7 +3076,7 @@ func (ts *typeSystem) validateScopedTargetFields (doc *Document) {
 				case *Field:
 					root := ts.root[d.OpType]
 					if root == nil {
-						ts.internError("NotDefinedInScope", sel.Name.S, "", sel.Name.P, nil)
+						ts.internError("NotDefinedInScope", sel.Name.S, "", PosList{sel.Name.P}, nil)
 					} else {
 						ts.proceedSelection(&NamedType{root.Name}, sel)
 					}
@@ -3182,13 +3198,13 @@ func (es *execSystem) fieldsInSetCanMerge (set *A.Tree) { // *fieldMapItem
 			for sB != nil {
 				fieldB := sB.field
 				if !es.sameResponseShape(fieldA, fieldB) {
-					es.internError("FieldsCantMerge", fieldA.Name.S, fieldB.Name.S, fieldA.Name.P, nil)
+					es.internError("FieldsCantMerge", fieldA.Name.S, fieldB.Name.S, PosList{fieldA.Name.P}, nil)
 					return
 				}
 				tyA := fieldA.parentType; tyB := fieldB.parentType
 				if equalTypes(tyA, tyB) || es.typeOf(tyA) != t_OBJECT || es.typeOf(tyB) != t_OBJECT {
 					if (fieldA.Name.S != fieldB.Name.S) || !EqualArgs(fieldA.Arguments, fieldB.Arguments) {
-						es.internError("FieldsCantMerge", fieldA.Name.S, fieldB.Name.S, fieldA.Name.P, nil)
+						es.internError("FieldsCantMerge", fieldA.Name.S, fieldB.Name.S, PosList{fieldA.Name.P}, nil)
 						return
 					}
 					mergedSet := A.New() // *fieldMapItem
@@ -3247,14 +3263,14 @@ func (ts *typeSystem) leafFieldsWalk (set SelectionSet) {
 				switch selectionType {
 				case t_SCALAR, t_ENUM:
 					if len(sel.SelSet) > 0 {
-						ts.internError("SubselectionOfScalarOrEnum", sel.Name.S, "", sel.Name.P, nil)
+						ts.internError("SubselectionOfScalarOrEnum", sel.Name.S, "", PosList{sel.Name.P}, nil)
 					}
 				case t_OBJECT, t_INTERFACE, t_UNION:
 					if len(sel.SelSet) == 0 {
-						ts.internError("NoSubselOfObjInterOrUnion", sel.Name.S, "", sel.Name.P, nil)
+						ts.internError("NoSubselOfObjInterOrUnion", sel.Name.S, "", PosList{sel.Name.P}, nil)
 					}
 				default:
-					ts.internError("IncorrectReturnTypeOf", nameOfType(selectionType), sel.Name.S, sel.Name.P, nil)
+					ts.internError("IncorrectReturnTypeOf", nameOfType(selectionType), sel.Name.S, PosList{sel.Name.P}, nil)
 				}
 			}
 			ts.leafFieldsWalk(sel.SelSet)
@@ -3499,10 +3515,10 @@ func (ts *typeSystem) validateArgumentValuesCoercion (argumentValues Arguments, 
 			}
 		}
 		if !ok {
-			ts.internError("IsNotInputFieldFor", name.S, defParentName.S, name.P, nil)
+			ts.internError("IsNotInputFieldFor", name.S, defParentName.S, PosList{name.P}, nil)
 		} else {
 			if !ts.isConstInputValueCoercibleToType(value, defVal, typ, vd) {
-				ts.internError("UnableToCoerce", name.S, "", name.P, nil)
+				ts.internError("UnableToCoerce", name.S, "", PosList{name.P}, nil)
 			}
 		}
 	}
@@ -3517,7 +3533,7 @@ func (ts *typeSystem) validateArgumentValuesCoercion (argumentValues Arguments, 
 			}
 		}
 		if !ok && !ts.isConstInputValueCoercibleToType(nil, a.DefVal, typ, vd) {
-			ts.internError("NoArgForNonNullType", name.S, defParentName.S, defParentName.P, nil)
+			ts.internError("NoArgForNonNullType", name.S, defParentName.S, PosList{defParentName.P}, nil)
 		}
 	}
 } //validateArgumentValuesCoercion
@@ -3528,11 +3544,11 @@ func (ts *typeSystem) validateArgs (asf ArgumentsDefinition, as Arguments, paren
 		name := as[i].Name
 		var f *InputValueDefinition
 		if !getInputField(asf, name, &f) {
-			ts.internError("IsNotInputFieldFor", name.S, parentName.S, name.P, nil)
+			ts.internError("IsNotInputFieldFor", name.S, parentName.S, PosList{name.P}, nil)
 		}
 		for j := i + 1; j < len(as); j++ {
 			if name.S == as[j].Name.S {
-				ts.internError("DupArgName", as[j].Name.S, "", as[j].Name.P, nil)
+				ts.internError("DupArgName", as[j].Name.S, "", PosList{as[j].Name.P}, nil)
 			}
 		}
 	}
@@ -3569,7 +3585,7 @@ func (ts *typeSystem) argumentNamesSetWalkS (set SelectionSet) {
 				if f == nil {
 					_, ok := d.(*UnionTypeDefinition)
 					if !(ok && sel.Name.S == "__typename") {
-						ts.internError("IsNotFieldFor", sel.Name.S, sel.parentType.Name.S, sel.Name.P, nil)
+						ts.internError("IsNotFieldFor", sel.Name.S, sel.parentType.Name.S, PosList{sel.Name.P}, nil)
 					}
 				} else {
 					ts.validateArgs(f.ArgsDef, sel.Arguments, sel.Name)
@@ -3629,7 +3645,7 @@ func (es *execSystem) argumentNamesSetWalkR (set SelectionSet, vd VariableDefini
 				if f == nil {
 					_, ok := d.(*UnionTypeDefinition)
 					if !(ok && sel.Name.S == "__typename") {
-						es.internError("IsNotFieldFor", sel.Name.S, sel.parentType.Name.S, sel.Name.P, nil)
+						es.internError("IsNotFieldFor", sel.Name.S, sel.parentType.Name.S, PosList{sel.Name.P}, nil)
 					}
 				} else {
 					es.validateArgumentValuesCoercion(sel.Arguments, f.ArgsDef, sel.Name, vd)
@@ -3655,7 +3671,7 @@ func (es *execSystem) validateRequiredArguments (doc *Document) {
 		for _, v := range vd {
 			value := v.DefVal
 			if value != nil && !es.isConstInputValueCoercibleToType(value, nil, v.Type, nil) {
-				es.internError("DefValIncoercibleToTypeIn", v.Var.S, "", v.Var.P, nil)
+				es.internError("DefValIncoercibleToTypeIn", v.Var.S, "", PosList{v.Var.P}, nil)
 			}
 		}
 	} //ValidateVariableDefinitions
@@ -3717,7 +3733,7 @@ func (es *execSystem) detectCycles (fragmentDefinition *FragmentDefinition, visi
 		if addName(v, el.Name) {
 			pathB := NewPathBuilder()
 			pathB = pathB.pushPathString(fragmentDefinition.Name)
-			es.internError("CycleThrough", el.Name.S, "", el.Name.P, pathB.GetPath())
+			es.internError("CycleThrough", el.Name.S, "", PosList{el.Name.P}, pathB.GetPath())
 			return true
 		}
 		if es.detectCycles(es.getFragmentDefinition(el.Name), v) {
@@ -3770,9 +3786,9 @@ func (ts *typeSystem) validateFragmentType (ty Type) {
 		switch ts.typeOf(namedType) {
 		case t_UNION, t_INTERFACE, t_OBJECT:
 		case t_NULL:
-			ts.internError("UnknownType", namedType.Name.S, "", namedType.Name.P, nil)
+			ts.internError("UnknownType", namedType.Name.S, "", PosList{namedType.Name.P}, nil)
 		default:
-			ts.internError("IncorrectFragmentType", namedType.Name.S, "", namedType.Name.P, nil)
+			ts.internError("IncorrectFragmentType", namedType.Name.S, "", PosList{namedType.Name.P}, nil)
 		}
 	}
 } //validateFragmentType
@@ -3792,7 +3808,7 @@ func (es *execSystem) walkFragments (used *A.Tree, set SelectionSet, parentType 
 			}
 			e = set1.Next(e)
 		}
-		es.internError("FragSpreadImpossible", fragmentType.Name.S, "", fragmentType.Name.P, nil)
+		es.internError("FragSpreadImpossible", fragmentType.Name.S, "", PosList{fragmentType.Name.P}, nil)
 	} //FragmentSpreadIsPossible
 
 	//walkFragments
@@ -3823,7 +3839,7 @@ func (es *execSystem) validateFragments (doc *Document) bool {
 		for e != nil {
 			el := e.Val().(*markMapItem)
 			if !el.mark {
-				es.internError("FragmentNotUsed", el.Name.S, "", el.Name.P, nil)
+				es.internError("FragmentNotUsed", el.Name.S, "", PosList{el.Name.P}, nil)
 			}
 			e = used.Next(e)
 		}
@@ -3838,7 +3854,7 @@ func (es *execSystem) validateFragments (doc *Document) bool {
 		case *OperationDefinition:
 			root := es.root[d.OpType]
 			if root == nil {
-				es.internError("RootNotDefinedFor", d.Name.S, "", d.Name.P, nil)
+				es.internError("RootNotDefinedFor", d.Name.S, "", PosList{d.Name.P}, nil)
 			} else {
 				rootType := &NamedType{root.Name}
 				es.walkFragments(used, d.SelSet, rootType)
@@ -3882,13 +3898,13 @@ func (ts *typeSystem) validateValueIV (name *StrPtr, value, defVal Value, typ Ty
 					}
 				}
 				if !b {
-					ts.internError("IsNotInputFieldFor", name.S, parentName.S, name.P, nil)
+					ts.internError("IsNotInputFieldFor", name.S, parentName.S, PosList{name.P}, nil)
 				} else {
 					ValidateObjectField(f, d.DefVal, d.Type, vd)
 				}
 				if set != nil {
 					if _, found, _ := set.SearchIns(&NameMapItem{name}); found {
-						ts.internError("DupFieldName", name.S, "", name.P, nil)
+						ts.internError("DupFieldName", name.S, "", PosList{name.P}, nil)
 					}
 				}
 			}
@@ -3906,9 +3922,9 @@ func (ts *typeSystem) validateValueIV (name *StrPtr, value, defVal Value, typ Ty
 				fieldName := fieldDefinition.Name
 				var val Value
 				if !getObjectValueInputField(value, fieldName, &val) {
-					ts.internError("NoArgForNonNullType", fieldName.S, name.S, name.P, nil)
+					ts.internError("NoArgForNonNullType", fieldName.S, name.S, PosList{name.P}, nil)
 				} else if _, ok := val.(*NullValue); ok {
-					ts.internError("NullArgForNonNullType", name.S, fieldName.S, name.P, nil)
+					ts.internError("NullArgForNonNullType", name.S, fieldName.S, PosList{name.P}, nil)
 				}
 			}
 		}
@@ -3940,7 +3956,7 @@ func (ts *typeSystem) validateValueIV (name *StrPtr, value, defVal Value, typ Ty
 	
 	//validateValueIV
 	if !ts.isConstInputValueCoercibleToType (value, defVal, typ, vd) {
-		ts.internError("UnableToCoerce", name.S, "", name.P, nil)
+		ts.internError("UnableToCoerce", name.S, "", PosList{name.P}, nil)
 	}
 	switch typ := typ.(type) {
 	case *NonNullType:
@@ -3963,7 +3979,7 @@ func (ts *typeSystem) validateValueIV (name *StrPtr, value, defVal Value, typ Ty
 					case *InputObjectValue:
 						ValidateInputObject(value, d, name, vd)
 					default:
-						ts.internError("IncorrectValueType", name.S, "", name.P, nil)
+						ts.internError("IncorrectValueType", name.S, "", PosList{name.P}, nil)
 					}
 				}
 			default:
@@ -3992,13 +4008,13 @@ func (ts *typeSystem) validateArgumentsIV (as Arguments, ds ArgumentsDefinition,
 			}
 		}
 		if !ok {
-			ts.internError("IsNotInputFieldFor", name.S, parentName.S, name.P, nil)
+			ts.internError("IsNotInputFieldFor", name.S, parentName.S, PosList{name.P}, nil)
 		} else {
 			ValidateArgument(a, d.DefVal, d.Type, vd)
 		}
 		if set != nil {
 			if _, found, _ := set.SearchIns(&NameMapItem{name}); found {
-				ts.internError("DupArgName", name.S, "", name.P, nil)
+				ts.internError("DupArgName", name.S, "", PosList{name.P}, nil)
 			}
 		}
 	}
@@ -4008,7 +4024,7 @@ func (ts *typeSystem) walkDirsIV (ds Directives, vd VariableDefinitions) {
 	for _, dir := range ds {
 		d := ts.getDirectiveDefinition(dir.Name)
 		if d == nil {
-			ts.internError("UnknownDirective", dir.Name.S, "", dir.Name.P, nil)
+			ts.internError("UnknownDirective", dir.Name.S, "", PosList{dir.Name.P}, nil)
 		} else {
 			ts.validateArgumentsIV(dir.Args, d.ArgsDef, dir.Name, vd, nil)
 		}
@@ -4031,7 +4047,7 @@ func (es *execSystem) walkSetsIV (set SelectionSet, parentType TypeDefinition, v
 			if fd == nil {
 				_, ok := parentType.(*UnionTypeDefinition)
 				if !(ok && sel.Name.S == "__typename") {
-					es.internError("IsNotFieldFor", sel.Name.S, parentType.TypeDefinitionC().Name.S, sel.Name.P, nil)
+					es.internError("IsNotFieldFor", sel.Name.S, parentType.TypeDefinitionC().Name.S, PosList{sel.Name.P}, nil)
 				}
 			} else {
 				es.validateArgumentsIV(sel.Arguments, fd.ArgsDef, sel.Name, vd, nil)
@@ -4080,7 +4096,7 @@ func (es *execSystem) validateInputValues (doc *Document) {
 		case *OperationDefinition:
 			rootType := es.root[d.OpType]
 			if rootType == nil {
-				es.internError("RootNotDefinedFor", d.Name.S, "", d.Name.P, nil)
+				es.internError("RootNotDefinedFor", d.Name.S, "", PosList{d.Name.P}, nil)
 			} else {
 				es.walkDirsIV(d.Dirs, d.VarDefs)
 				ValidateVariableDefinitions(d.VarDefs)
@@ -4096,11 +4112,11 @@ func (ts *typeSystem) verifyLocation (ds Directives, loc int) {
 	for _, dir := range ds {
 		d := ts.getDirectiveDefinition(dir.Name)
 		if d == nil {
-			ts.internError("UnknownDirective", dir.Name.S, "", dir.Name.P, nil)
+			ts.internError("UnknownDirective", dir.Name.S, "", PosList{dir.Name.P}, nil)
 		} else {
 			if !d.Rep {
 				if _, found, _ := set.SearchIns(&NameMapItem{dir.Name}); found {
-					ts.internError("DupDirName", dir.Name.S, "", dir.Name.P, nil)
+					ts.internError("DupDirName", dir.Name.S, "", PosList{dir.Name.P}, nil)
 				}
 			}
 			ok := false
@@ -4111,7 +4127,7 @@ func (ts *typeSystem) verifyLocation (ds Directives, loc int) {
 				}
 			}
 			if !ok {
-				ts.internError("DirectiveInWrongLocation", dir.Name.S, "", dir.Name.P, nil)
+				ts.internError("DirectiveInWrongLocation", dir.Name.S, "", PosList{dir.Name.P}, nil)
 			}
 		}
 	}
@@ -4185,7 +4201,7 @@ func (ts *typeSystem) validateValueVV (ivd *InputValueDefinition, typ Type, valu
 			if j < len(ads) {
 				ts.validateValueVV(ads[j], ads[j].Type, f.Value, opName, varDefs, vars)
 			} else {
-				ts.internError("UnknownArgument", f.Name.S, "", f.Name.P, nil);
+				ts.internError("UnknownArgument", f.Name.S, "", PosList{f.Name.P}, nil);
 			}
 		}
 	} //ValidateInputFields
@@ -4196,9 +4212,9 @@ func (ts *typeSystem) validateValueVV (ivd *InputValueDefinition, typ Type, valu
 		case *Variable:
 			vars.SearchIns(&NameMapItem{value.Name})
 			if e, found, _ := varDefs.Search(&NameMapItem{value.Name}); !found {
-				ts.internError("UnknownVariable", value.Name.S, opName.S, value.Name.P, nil)
+				ts.internError("UnknownVariable", value.Name.S, opName.S, PosList{value.Name.P}, nil)
 			} else if !isVariableUsageAllowed(e.Val().(*varDefMapItem).vd, ivd, typ) {
-				ts.internError("VarUsageNotAllowed", value.Name.S, "", value.Name.P, nil)
+				ts.internError("VarUsageNotAllowed", value.Name.S, "", PosList{value.Name.P}, nil)
 			}
 		case *ListValue:
 			switch typ := typ.(type) {
@@ -4209,7 +4225,7 @@ func (ts *typeSystem) validateValueVV (ivd *InputValueDefinition, typ Type, valu
 			case *NonNullType:
 				ts.validateValueVV(ivd, typ.NullT, value, opName, varDefs, vars)
 			default:
-				ts.internError("IncorrectValueType", ivd.Name.S, "", ivd.Name.P, nil)
+				ts.internError("IncorrectValueType", ivd.Name.S, "", PosList{ivd.Name.P}, nil)
 			}
 		case *InputObjectValue:
 			d := ts.getTypeDefinition(namedTypeOf(typ).Name)
@@ -4227,7 +4243,7 @@ func (ts *typeSystem) validateValueVV (ivd *InputValueDefinition, typ Type, valu
 
 func (ts *typeSystem) validateArgumentsVV (ads ArgumentsDefinition, as Arguments, opName *StrPtr, varDefs, vars *A.Tree) { // *varDefMapItem & *NameMapItem
 	if len(as) > len(ads) {
-		ts.internError("IncorrectArgsNb", opName.S, "", opName.P, nil)
+		ts.internError("IncorrectArgsNb", opName.S, "", PosList{opName.P}, nil)
 	} else {
 		for _, a := range as {
 			j := 0
@@ -4237,7 +4253,7 @@ func (ts *typeSystem) validateArgumentsVV (ads ArgumentsDefinition, as Arguments
 			if j < len(ads) {
 				ts.validateValueVV(ads[j], ads[j].Type, a.Value, opName, varDefs, vars)
 			} else {
-				ts.internError("UnknownArgument", a.Name.S, "", a.Name.P, nil);
+				ts.internError("UnknownArgument", a.Name.S, "", PosList{a.Name.P}, nil);
 			}
 		}
 	}
@@ -4269,7 +4285,7 @@ func (es *execSystem) walkSelectionSet (parentType TypeDefinition, set Selection
 			if f == nil {
 				_, b := parentType.(*UnionTypeDefinition)
 				if !(b && sel.Name.S == "__typename") {
-					es.internError("IsNotFieldFor", sel.Name.S, parentType.TypeDefinitionC().Name.S, sel.Name.P, nil)
+					es.internError("IsNotFieldFor", sel.Name.S, parentType.TypeDefinitionC().Name.S, PosList{sel.Name.P}, nil)
 				}
 			} else {
 				es.validateArgumentsVV(f.ArgsDef, sel.Arguments, opName, varDefs, vars)
@@ -4306,10 +4322,10 @@ func (es *execSystem) validateVariables (doc *Document) {
 	VerifyVariables := func (vds VariableDefinitions, varDefs *A.Tree) { // *varDefMapItem
 		for _, vd := range vds {
 			if _, found, _ := varDefs.SearchIns(&varDefMapItem{NameMapItem{vd.Var}, vd}); found {
-				es.internError("DupVarName", vd.Var.S, "", vd.Var.P, nil)
+				es.internError("DupVarName", vd.Var.S, "", PosList{vd.Var.P}, nil)
 			}
 			if !es.isInputType(vd.Type) {
-				es.internError("NotInputType", vd.Var.S, "", vd.Var.P, nil)
+				es.internError("NotInputType", vd.Var.S, "", PosList{vd.Var.P}, nil)
 			}
 		}
 	} //VerifyVariables
@@ -4326,7 +4342,7 @@ func (es *execSystem) validateVariables (doc *Document) {
 			es.validateDirectivesVV(d.Dirs, d.Name, varDefs, vars)
 			rootType := es.root[d.OpType]
 			if rootType == nil {
-				es.internError("RootNotDefinedFor", d.Name.S, "", d.Name.P, nil)
+				es.internError("RootNotDefinedFor", d.Name.S, "", PosList{d.Name.P}, nil)
 			} else {
 				es.walkSelectionSet(rootType, d.SelSet, d.Name, varDefs, vars)
 			}
@@ -4335,7 +4351,7 @@ func (es *execSystem) validateVariables (doc *Document) {
 				ee := varDefs.Next(e)
 				if _, found, _ := vars.Search(e.Val().(*varDefMapItem)); !found {
 					el := e.Val().(*varDefMapItem)
-					es.internError("VariableNotUsed", el.Name.S, "", el.Name.P, nil)
+					es.internError("VariableNotUsed", el.Name.S, "", PosList{el.Name.P}, nil)
 				}
 				e = ee
 			}
@@ -4615,7 +4631,7 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 					}
 				}
 				*cValue = MakeNullValue()
-				ts.internError("WrongEnumValueForEnumType", s.S, d.Name.S, s.P, pathB.GetPath())
+				ts.internError("WrongEnumValueForEnumType", s.S, d.Name.S, PosList{s.P}, pathB.GetPath())
 			default:
 				ts.internError("NonEnumValueForEnumType", d.Name.S, "", nil, pathB.GetPath())
 			}
@@ -4626,7 +4642,7 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 				for f := val.First(); f != nil; f = val.Next(f) {
 					var fd *InputValueDefinition
 					if !getInputField(d.InFieldsDef, f.Name, &fd) {
-						ts.internError("IsNotFieldFor", f.Name.S, d.Name.S, f.Name.P, pathB.GetPath())
+						ts.internError("IsNotFieldFor", f.Name.S, d.Name.S, PosList{f.Name.P}, pathB.GetPath())
 						return false
 					}
 				}
@@ -5655,7 +5671,7 @@ func (ts *typeSystem) validateTypesDirectives (dirs Directives) {
 		for i := 0; i < len(as); i++ {
 			for j := i + 1; j < len(as); j++ {
 				if as[i].Name.S == as[j].Name.S {
-					ts.internError("DupArgName", as[j].Name.S, "", as[j].Name.P, nil)
+					ts.internError("DupArgName", as[j].Name.S, "", PosList{as[j].Name.P}, nil)
 				}
 			}
 		}
@@ -5669,7 +5685,7 @@ func (ts *typeSystem) validateTypesDirectives (dirs Directives) {
 		if !d.Rep {
 			for j := i + 1; j < len(dirs); j++ {
 				if dirs[j].Name.S == dir.Name.S {
-					ts.internError("DupDirName", dirs[j].Name.S, "", dirs[j].Name.P, nil);
+					ts.internError("DupDirName", dirs[j].Name.S, "", PosList{dirs[j].Name.P}, nil);
 				}
 			}
 		}
@@ -5682,10 +5698,10 @@ func (ts *typeSystem) validateArgumentsDefinition (ds ArgumentsDefinition) {
 	ValidateArgumentDefinition := func (d *InputValueDefinition) {
 		ts.verifyNotIntro(d.Name)
 		if !ts.isInputType(d.Type) {
-			ts.internError("NotInputField", d.Name.S, "", d.Name.P, nil)
+			ts.internError("NotInputField", d.Name.S, "", PosList{d.Name.P}, nil)
 		}
 		if d.DefVal != nil && !ts.isConstInputValueCoercibleToType(d.DefVal, nil, d.Type, nil) {
-			ts.internError("DefValIncoercibleToTypeIn", d.Name.S, "", d.Name.P, nil)
+			ts.internError("DefValIncoercibleToTypeIn", d.Name.S, "", PosList{d.Name.P}, nil)
 		}
 		ts.validateTypesDirectives(d.Dirs)
 		ts.verifyLocation(d.Dirs, l_ARGUMENT_DEFINITION)
@@ -5696,7 +5712,7 @@ func (ts *typeSystem) validateArgumentsDefinition (ds ArgumentsDefinition) {
 	for _, d := range ds {
 		name := d.Name
 		if _, b, _ := t.SearchIns(&NameMapItem{name}); b {
-			ts.internError("DupArgName", name.S, "", name.P, nil)
+			ts.internError("DupArgName", name.S, "", PosList{name.P}, nil)
 		}
 		ValidateArgumentDefinition(d)
 	}
@@ -5796,7 +5812,7 @@ func (ts typeSystem) validateInputObjectsCircularReferences (t *A.Tree, d *Input
 				}
 				exclude(t, name)
 			} else {
-				ts.internError("CircularInputs", name.S, "", name.P, nil);
+				ts.internError("CircularInputs", name.S, "", PosList{name.P}, nil);
 			}
 		}
 	}
@@ -5838,11 +5854,11 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 	
 	ValidateFieldDefinition := func (t *A.Tree, d *FieldDefinition) { // *fieldDefMapItem
 		if _, b, _ := t.SearchIns(&fieldDefMapItem{NameMapItem{d.Name}, d}); b {
-			ts.internError("DupFieldName", d.Name.S, "", d.Name.P, nil)
+			ts.internError("DupFieldName", d.Name.S, "", PosList{d.Name.P}, nil)
 		}
 		ts.verifyNotIntro(d.Name)
 		if !ts.isOutputType(d.Type) {
-			ts.internError("NotOutputType", d.Name.S, "", d.Name.P, nil)
+			ts.internError("NotOutputType", d.Name.S, "", PosList{d.Name.P}, nil)
 		}
 		ts.validateArgumentsDefinition(d.ArgsDef)
 		ts.validateTypesDirectives(d.Dirs)
@@ -5864,9 +5880,9 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 					}
 				}
 				if !ok {
-					ts.internError("UnknownArgument", aai.Name.S, "", aai.Name.P, nil)
+					ts.internError("UnknownArgument", aai.Name.S, "", PosList{aai.Name.P}, nil)
 				} else if !equalTypes(ivd.Type, aai.Type) {
-					ts.internError("WrongArgumentType", aai.Name.S, "", aai.Name.P, nil)
+					ts.internError("WrongArgumentType", aai.Name.S, "", PosList{aai.Name.P}, nil)
 				}
 			}
 			for _, aa := range a {
@@ -5880,7 +5896,7 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 				}
 				if !ok {
 					if _, b := aa.Type.(*NonNullType); b {
-						ts.internError("ArgNotRequiredByInterface", aa.Name.S, "", aa.Name.P, nil)
+						ts.internError("ArgNotRequiredByInterface", aa.Name.S, "", PosList{aa.Name.P}, nil)
 					}
 				}
 			}
@@ -5893,11 +5909,11 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 			fi := ddi.FieldsDef
 			for _, ffi := range fi {
 				if e, b, _ := t.Search(&fieldDefMapItem{NameMapItem: NameMapItem{ffi.Name}}); !b {
-					ts.internError("NotImplementedIn", ffi.Name.S, d.TypeDefinitionC().Name.S, ffi.Name.P, nil)
+					ts.internError("NotImplementedIn", ffi.Name.S, d.TypeDefinitionC().Name.S, PosList{ffi.Name.P}, nil)
 				} else {
 					f := e.Val().(*fieldDefMapItem).field
 					if !ts.subtype(f.Type, ffi.Type) {
-						ts.internError("NotSubtype", f.Name.S, ffi.Name.S, f.Name.P, nil)
+						ts.internError("NotSubtype", f.Name.S, ffi.Name.S, PosList{f.Name.P}, nil)
 					}
 					ValidateArguments(f.ArgsDef, ffi.ArgsDef)
 				}
@@ -5915,7 +5931,7 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 		ti := A.New() // *NameMapItem
 		for _, ii := range d.ImpInter {
 			if _, b, _ := ti.SearchIns(&NameMapItem{ii.Name}); b {
-				ts.internError("DupInterface", ii.Name.S, "", ii.Name.P, nil)
+				ts.internError("DupInterface", ii.Name.S, "", PosList{ii.Name.P}, nil)
 			}
 			ValidateImplementation(t, ii)
 		}
@@ -5929,10 +5945,10 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 		ti := A.New() // *NameMapItem
 		for _, ii := range d.ImpInter {
 			if ii.Name.S == d.Name.S {
-				ts.internError("SelfInterface", d.Name.S, "", ii.Name.P, nil)
+				ts.internError("SelfInterface", d.Name.S, "", PosList{ii.Name.P}, nil)
 			}
 			if _, b, _ := ti.SearchIns(&NameMapItem{ii.Name}); b {
-				ts.internError("DupInterface", ii.Name.S, "", ii.Name.P, nil)
+				ts.internError("DupInterface", ii.Name.S, "", PosList{ii.Name.P}, nil)
 			}
 			ValidateImplementation(t, ii)
 		}
@@ -5943,12 +5959,12 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 		for _, u := range d.UnionMTypes {
 			name := u.Name
 			if _, b, _ := t.SearchIns(&NameMapItem{name}); b {
-				ts.internError("DupTypeName", name.S, "", name.P, nil)
+				ts.internError("DupTypeName", name.S, "", PosList{name.P}, nil)
 			}
 			do := ts.getTypeDefinition(name)
 			if do != nil {
 				if _, b := do.(*ObjectTypeDefinition); !b {
-					ts.internError("NotObjectTypeInUnion", name.S, d.Name.S, name.P, nil)
+					ts.internError("NotObjectTypeInUnion", name.S, d.Name.S, PosList{name.P}, nil)
 				}
 			}
 		}
@@ -5960,7 +5976,7 @@ func (ts *typeSystem) validateTypeDefinition (d TypeDefinition) {
 		for _, ev := range evs {
 			name := ev.EnumVal.Enum
 			if _, b, _ := t.SearchIns(&NameMapItem{name}); b {
-				ts.internError("DupEnumValue", name.S, "", name.P, nil)
+				ts.internError("DupEnumValue", name.S, "", PosList{name.P}, nil)
 			}
 			ts.validateTypesDirectives(ev.Dirs)
 			ts.verifyLocation(ev.Dirs, l_ENUM_VALUE)
@@ -6056,7 +6072,7 @@ func (ts *typeSystem) walkType (ty Type, visited *A.Tree) { // *NameMapItem
 
 func (ts *typeSystem) verifyNoCycle (d *DirectiveDefinition, visited *A.Tree) { // *NameMapItem
 	if _, b, _ := visited.SearchIns(&NameMapItem{d.Name}); b {
-		ts.internError("CycleThrough", d.Name.S, "", d.Name.P, nil)
+		ts.internError("CycleThrough", d.Name.S, "", PosList{d.Name.P}, nil)
 	}
 	as := d.ArgsDef
 	for _, a := range as {
@@ -6069,7 +6085,7 @@ func (ts *typeSystem) walkDirs (ds Directives, visited *A.Tree) { // *NameMapIte
 	for _, dir := range ds {
 		d := ts.getDirectiveDefinition(dir.Name)
 		if d == nil {
-			ts.internError("UnknownDirective", dir.Name.S, "", dir.Name.P, nil)
+			ts.internError("UnknownDirective", dir.Name.S, "", PosList{dir.Name.P}, nil)
 		} else {
 			ts.verifyNoCycle(d, visited)
 		}
@@ -6102,14 +6118,14 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 	
 	FixRoot := func (root **ObjectTypeDefinition, name *StrPtr) {
 		if *root != nil {
-			ts.internError("AlrdyDefinedRoot", name.S, "", name.P, nil)
+			ts.internError("AlrdyDefinedRoot", name.S, "", PosList{name.P}, nil)
 		}
 		ty := ts.getTypeDefinition(name)
 		if ty != nil {
 			if typ, ok := ty.(*ObjectTypeDefinition); ok {
 				*root = typ
 			} else {
-				ts.internError("WrongRootType", name.S, "", name.P, nil)
+				ts.internError("WrongRootType", name.S, "", PosList{name.P}, nil)
 			}
 		}
 	} //FixRoot
@@ -6142,7 +6158,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			dd := ts.getTypeDefinition(d.Name)
 			if dd != nil {
 				if s, b := dd.(*ScalarTypeDefinition); !b {
-					ts.internError("ScalarExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("ScalarExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &s.Dirs)
 				}
@@ -6151,7 +6167,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			d2 := ts.getTypeDefinition(d.Name)
 			if d2 != nil {
 				if dd , b := d2.(*ObjectTypeDefinition); !b {
-					ts.internError("ObjectExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("ObjectExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &dd.Dirs)
 					impInter := make(NamedTypes, len(d.ImpInter) + len(dd.ImpInter))
@@ -6184,7 +6200,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			d2 := ts.getTypeDefinition(d.Name)
 			if d2 != nil {
 				if dd, b := d2.(*InterfaceTypeDefinition); !b {
-					ts.internError("InterfaceExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("InterfaceExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &dd.Dirs)
 					fieldsDef := make(FieldsDefinition, len(d.FieldsDef) + len(dd.FieldsDef))
@@ -6205,7 +6221,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			d2 := ts.getTypeDefinition(d.Name)
 			if d2 != nil {
 				if dd, b := d2.(*UnionTypeDefinition); !b {
-					ts.internError("UnionExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("UnionExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &dd.Dirs)
 					unionMTypes := make(NamedTypes, len(d.UnionMTypes) + len(dd.UnionMTypes))
@@ -6226,7 +6242,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			d2 := ts.getTypeDefinition(d.Name)
 			if d2 != nil {
 				if dd, b := d2.(*EnumTypeDefinition); !b {
-					ts.internError("EnumExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("EnumExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &dd.Dirs)
 					enumValsDef := make(EnumValuesDefinition, len(d.EnumValsDef) + len(dd.EnumValsDef))
@@ -6247,7 +6263,7 @@ func (ts *typeSystem) collectInfos (ds Definitions) {
 			d2 := ts.getTypeDefinition(d.Name)
 			if d2 != nil {
 				if dd, b := d2.(*InputObjectTypeDefinition); !b {
-					ts.internError("InputObjExtWoDef", d.Name.S, "", d.Name.P, nil)
+					ts.internError("InputObjExtWoDef", d.Name.S, "", PosList{d.Name.P}, nil)
 				} else {
 					CopyDirs(&d.Dirs, &dd.Dirs)
 					inFieldsDef := make(ArgumentsDefinition, len(d.InFieldsDef) + len(dd.InFieldsDef))
@@ -6312,7 +6328,7 @@ func makeFieldDefinition (name string, argsDef ArgumentsDefinition, typ Type) *F
 func (ts *typeSystem) insertDefinition (t *A.Tree, name *StrPtr, d Definition) { // *defMapItem
 	ts.verifyNotIntro(name)
 	if _, b, _ := t.SearchIns(&defMapItem{NameMapItem{name}, d}); b {
-		ts.internError("DupName", name.S, "", name.P, nil)
+		ts.internError("DupName", name.S, "", PosList{name.P}, nil)
 	}
 } //insertDefinition
 
@@ -6332,7 +6348,7 @@ func (ts *typeSystem) collectNames (ds Definitions) {
 		if td == nil {
 			ts.insertDefinition(ts.typeMap, name, MakeScalarTypeDefinition(name, sc))
 		} else if _, b := td.(*ScalarTypeDefinition); !b {
-			ts.internError("MisusedName", s, "", name.P, nil)
+			ts.internError("MisusedName", s, "", PosList{name.P}, nil)
 		}
 	} //InsertBuiltInScalar
 	
@@ -6464,7 +6480,7 @@ func (ts *typeSystem) collectNames (ds Definitions) {
 				if d.coercer == nil {
 					ts.FixScalarCoercer(d.Name.S, &d.coercer);
 					if d.coercer == nil {
-						ts.internError("CoercerNotDefined", d.Name.S, "", d.Name.P, nil);
+						ts.internError("CoercerNotDefined", d.Name.S, "", PosList{d.Name.P}, nil);
 					}
 				}
 			default:

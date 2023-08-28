@@ -27,6 +27,8 @@ type (
 		P, L, C int
 	}
 	
+	PosList []*PosT
+	
 	// Aggregate of a string and of its position in compiled text
 	StrPtr	struct {
 		P	*PosT

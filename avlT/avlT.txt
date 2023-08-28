@@ -60,7 +60,7 @@ func (t *Tree[T]) IsEmpty () bool
 // 'Empty' empties 't'
 func (t *Tree[T]) Empty ()
 
-/ 'Val' returns the value contained in the element 'e'.
+// 'Val' returns the value contained in the element 'e'.
 func (e *Elem[T]) Val () T
 
 // 'SetVal' sets the value 'v' into the element 'e'.

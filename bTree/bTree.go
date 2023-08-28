@@ -511,10 +511,13 @@ type (
 func StringPrefP (key1, key2 *String, compare StringComparer) *String {
 	M.Assert(key1 != nil && key2 != nil, 20)
 	M.Assert(key2.C == "" || compare(key1, key2) == Lt, 21)
-	l2 := len(key2.C)
+	k2 := []rune(key2.C)
+	l2 := len(k2)
+	k := make([]rune, 0)
 	key := new(String); key.C = ""
 	for l := 0; l < l2 && !(compare(key1, key) == Lt && compare(key, key2) <= Eq); l++ {
-		key.C += string(key2.C[l])
+		k = append(k, k2[l])
+		key.C = string(k)
 	}
 	return key
 } //StringPrefP

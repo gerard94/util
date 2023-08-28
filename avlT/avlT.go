@@ -24,7 +24,7 @@ import (
 type (
 	
 	// Result of a comparison.
-	Comp int8
+	Comp = int8
 	
 	// Type of function used by 'WalkThrough'; 'v' is the value of an element of tree, 'p' are parameters.
 	DoFunc [T any] func (v T, p ...interface{})

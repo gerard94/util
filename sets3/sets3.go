@@ -55,7 +55,7 @@ func (s *Set) NbElems () int {
 	return (*A.Tree)(s).NumberOfElems()
 }
 
-// Creates and returns a copy of s.
+// Creates and returns a deep copy of s.
 func (s *Set) Copy () *Set {
 	return (*Set)((*A.Tree)(s).Copy())
 }
@@ -167,12 +167,20 @@ func (s1 *Set) Subset (s2 *Set) bool {
 	return s1.Diff(s2).IsEmpty()
 }
 
+// Return the element of 's' of rank 'rank' (from 0) in lexicographic order
+func (s *Set) ElemOfRank (rank int) string {
+	M.Assert(0 <= rank && rank < s.NbElems(), rank, s.NbElems(), 20)
+	t := (*A.Tree)(s)
+	e, _ := t.Find(rank + 1)
+	return string(*e.Val().(*Elem))
+}
+
 // Attach the set s to a SetIterator and return the later.
 func (s *Set) Attach () *SetIterator {
 	return &SetIterator{t: (*A.Tree)(s)}
 }
 
-// On return, e contains the first element of the set attached to i. Returns true in ok if such an element exists. Usage: e, ok := i.FirstE(); for ok { ... e, ok = i.NextE()}
+// On return, e contains the first element of the set attached to i. Returns true in ok if such an element exists. Usage: for e, ok := i.FirstE(); ok; e, ok = i.NextE() { ... }
 func (i *SetIterator) FirstE () (e string, ok bool) {
 	i.e = i.t.Next(nil)
 	ok = i.e != nil
@@ -182,7 +190,7 @@ func (i *SetIterator) FirstE () (e string, ok bool) {
 	return
 }
 
-// On return, e contains the next element of the set attached to i. Returns true in ok if such an element exists. i.FirstE must have been called once before i.NextE. Usage: e, ok := i.FirstE(); for ok { ... e, ok = i.NextE()}
+// On return, e contains the next element of the set attached to i. Returns true in ok if such an element exists. i.FirstE must have been called once before i.NextE. Usage: for e, ok := i.FirstE(); ok; e, ok = i.NextE() { ... }
 func (i *SetIterator) NextE () (e string, ok bool) {
 	i.e = i.t.Next(i.e)
 	ok = i.e != nil

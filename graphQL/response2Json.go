@@ -15,16 +15,20 @@ func makeErrors (mk *J.Maker, errors *A.Tree) {
 			mk.StartObject()
 			mk.PushString(el.Message)
 			mk.BuildField("message")
-			if el.Location != nil {
-				mk.StartObject()
-				mk.PushInteger(int64(el.Location.P))
-				mk.BuildField("position")
-				mk.PushInteger(int64(el.Location.L))
-				mk.BuildField("line")
-				mk.PushInteger(int64(el.Location.C))
-				mk.BuildField("column")
-				mk.BuildObject()
-				mk.BuildField("location")
+			if el.Locations != nil {
+				mk.StartArray()
+				for _, loc := range el.Locations {
+					mk.StartObject()
+					mk.PushInteger(int64(loc.P))
+					mk.BuildField("position")
+					mk.PushInteger(int64(loc.L))
+					mk.BuildField("line")
+					mk.PushInteger(int64(loc.C))
+					mk.BuildField("column")
+					mk.BuildObject()
+				}
+				mk.BuildArray()
+				mk.BuildField("locations")
 			}
 			p := el.Path
 			if p != nil {

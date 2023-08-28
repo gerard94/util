@@ -69,8 +69,14 @@ func printErrors (w io.Writer, errors *A.Tree) {
 	for e != nil {
 		el := e.Val().(*G.ErrorElem)
 		fmt.Fprint(w, el.Message)
-		if el.Location != nil {
-			fmt.Fprint(w, " at ", el.Location.L, ":", el.Location.C)
+		if el.Locations != nil {
+			fmt.Fprint(w, " at")
+			for i, loc := range el.Locations {
+				if i > 0 {
+					fmt.Fprint(w, ",")
+				}
+				fmt.Fprint(w, " ", loc.L, ":", loc.C)
+			}
 		}
 		p := el.Path
 		if p != nil {

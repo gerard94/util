@@ -25,7 +25,7 @@ import (
 
 const (
 	
-	version = "1.0.3"
+	version = "1.0.4"
 
 )
 
@@ -75,10 +75,18 @@ type (
 
 var (
 	
-	StdLg = log.New(os.Stderr, "", log.LstdFlags)
-	lg = StdLg
+	stdLg = log.New(os.Stderr, "", log.LstdFlags)
+	lg = stdLg
 
 )
+
+func GetStdLog () *log.Logger {
+	return stdLg
+}
+
+func GetLog () *log.Logger {
+	return lg
+}
 
 func SetLog (log *log.Logger) {
 	lg = log
@@ -222,21 +230,21 @@ func AbsF64 (a float64) float64 {
 }
 
 func haltCommon (flag ... interface{}) {
-	lg.Output(3, "*** ERROR ***");
+	lg.Println("*** ERROR ***");
 	if len(flag) == 0 {
-		lg.Output(3, "Assert error")
+		lg.Println("Assert error")
 		panic("Assert error")
 	}
 	for _, f := range flag {
 		switch e := f.(type) {
 		case error:
-			lg.Output(3, e.Error())
+			lg.Println(e.Error())
 		case string:
-			lg.Output(3, e)
+			lg.Println(e)
 		case int:
-			lg.Output(3, SC.Itoa(e))
+			lg.Println(SC.Itoa(e))
 		default:
-			lg.Print(f)
+			lg.Println(f)
 		}
 	}
 	panic(flag[len(flag) - 1])
