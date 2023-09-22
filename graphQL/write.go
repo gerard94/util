@@ -94,7 +94,9 @@ func writeValue (w S.Writer, flat bool, v Value, mS *bool) {
 	} //WriteField
 	
 	//writeValue
-	if v != nil {
+	if v == nil {
+		w.WriteString("nil")
+	} else {
 		switch v := v.(type) {
 		case *Variable:
 			w.WriteString("$")

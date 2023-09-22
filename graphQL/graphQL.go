@@ -3451,44 +3451,8 @@ func (ts *typeSystem) isConstInputValueCoercibleToType (value, defValue Value, t
 					if !ok {
 						return false
 					}
-					v := f.Value
-					if _, ok := v.(*NullValue); ok {
-						if _, ok := t.(*NonNullType); ok {
-							return false
-						}
-					} else if _, ok := v.(*Variable); !ok {
-						if !ts.isConstInputValueCoercibleToType(v, nil, t, vd) {
-							return false
-						}
-					} else { // v IS *Variable
-						name := v.(*Variable).Name
-						if vd == nil {
-							return false
-						}
-						ok := false
-						for _, vdi := range vd {
-							if vdi.Var.S == name.S {
-								ok = true
-								v = vdi.DefVal
-								break
-							}
-						}
-						if !ok {
-							return false
-						}
-						if v == nil {
-							v = defVal
-						}
-						_, b := t.(*NonNullType)
-						if b {
-							b = v == nil
-							if !b {
-								_, b = v.(*NullValue)
-							}
-						}
-						if b {
-							return false
-						}
+					if !ts.isConstInputValueCoercibleToType(f.Value, defVal, t, vd) {
+						return false
 					}
 				}
 				return true
