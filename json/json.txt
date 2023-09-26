@@ -52,7 +52,7 @@ type (
 		Fields Fields
 	}
 	
-	Fields	[]Field
+	Fields	[]*Field
 	
 	Field	struct {
 		Name	string
@@ -136,21 +136,37 @@ func (a *Array) GetArray () *Array
 
 func GetValue (o *Object, name string) (Value, bool)
 
+func SetValue (o *Object, name string, value Value)
+
 func GetLength (a *Array) int
 
 func GetElem (a *Array, num int) (Value, bool)
 
+func SetElem (a *Array, num int, value Value) bool
+
 func GetJson (v Value) (Json, bool)
+
+func SetJson (j Json) Value
 
 func GetString (v Value) (string, bool)
 
+func SetString (s string) Value
+
 func GetInt (v Value) (int64, bool)
+
+func SetInt (n int64) Value
 
 func GetFloat (v Value) (float64, bool)
 
+func SetFloat (f float64) Value
+
 func GetBool (v Value) (bool, bool)
 
+func SetBool (b bool) Value
+
 func GetNull (v Value) bool
+
+func SetNull() Value
 
 // 'Compile' builds a Json from an 'io.ReadSeeker'
 func Compile (rs io.ReadSeeker) Json

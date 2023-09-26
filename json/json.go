@@ -111,7 +111,7 @@ type (
 		Fields Fields
 	}
 	
-	Fields []Field
+	Fields []*Field
 	
 	Field struct {
 		Name string
@@ -255,7 +255,7 @@ func getField (o *Object, name string) *Field {
 	if o != nil {
 		for _, f := range o.Fields {
 			if f.Name == name {
-				return &f
+				return f
 			}
 		}
 	}
@@ -268,6 +268,14 @@ func GetValue (o *Object, name string) (Value, bool) {
 		return nil, false
 	}
 	return f.Value, true
+}
+
+func SetValue (o *Object, name string, value Value) {
+	f := getField(o, name)
+	if f == nil {
+		o.Fields = append(o.Fields, &Field{Name: name, Value: value})
+	}
+	f.Value = value
 }
 
 func GetLength (a *Array) int {
@@ -284,6 +292,14 @@ func GetElem (a *Array, num int) (Value, bool) {
 	return nil, false
 }
 
+func SetElem (a *Array, num int, value Value) bool {
+	if a != nil && a.Elements != nil && num >= 0 && num < len(a.Elements) {
+		a.Elements[num] = value
+		return true
+	}
+	return false
+}
+
 func GetJson (v Value) (Json, bool) {
 	if v == nil {
 		return nil, false
@@ -293,6 +309,10 @@ func GetJson (v Value) (Json, bool) {
 		return nil, false
 	}
 	return j.Json, true
+}
+
+func SetJson (j Json) Value {
+	return &JsonVal{Json: j}
 }
 
 func GetString (v Value) (string, bool) {
@@ -306,6 +326,10 @@ func GetString (v Value) (string, bool) {
 	return s.S, true
 }
 
+func SetString (s string) Value {
+	return &String{S: s}
+}
+
 func GetInt (v Value) (int64, bool) {
 	if v == nil {
 		return 0, false
@@ -315,6 +339,10 @@ func GetInt (v Value) (int64, bool) {
 		return 0, false
 	}
 	return i.N, true
+}
+
+func SetInt (n int64) Value {
+	return &Integer{N: n}
 }
 
 func GetFloat (v Value) (float64, bool) {
@@ -328,6 +356,10 @@ func GetFloat (v Value) (float64, bool) {
 	return ff.F, true
 }
 
+func SetFloat (f float64) Value {
+	return &Float{F: f}
+}
+
 func GetBool (v Value) (bool, bool) {
 	if v == nil {
 		return false, false
@@ -339,12 +371,20 @@ func GetBool (v Value) (bool, bool) {
 	return b.Bool, true
 }
 
+func SetBool (b bool) Value {
+	return &Bool{Bool: b}
+}
+
 func GetNull (v Value) bool {
 	if v == nil {
 		return false
 	}
 	_, ok := v.(*Null)
 	return ok
+}
+
+func SetNull () Value {
+	return &Null{}
 }
 
 //*********** Json -> Go ***********
@@ -429,8 +469,7 @@ func eval (o *C.Object) Json {
 		for i := 0; i < n; i++ {
 			oo := o.ObjTermSon(1)
 			s := oo.ObjString()
-			f[i].Name = s[1:len(s) - 1]
-			f[i].Value = EvalVal(o.ObjTermSon(2))
+			f[i] = &Field{Name: s[1:len(s) - 1], Value: EvalVal(o.ObjTermSon(2))}
 			o = o.ObjTermSon(3)
 		}
 		return f
@@ -717,7 +756,7 @@ func writeJson (w io.Writer, j Json, flat bool, indent int) {
 					fmt.Fprintf(w, "%s", ",")
 					lnC()
 				}
-				WriteField(&f, indent)
+				WriteField(f, indent)
 			}
 			lnC()
 		}
@@ -957,7 +996,7 @@ func (m *Maker) BuildObject () {
 		o.Fields = make(Fields, n)
 		for i := n - 1; i >= 0; i-- {
 			sf := m.pull().(*stField)
-			o.Fields[i] = Field{sf.name, sf.value}
+			o.Fields[i] = &Field{sf.name, sf.value}
 		}
 	}
 	m.pull()
