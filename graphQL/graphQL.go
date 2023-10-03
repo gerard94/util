@@ -4595,7 +4595,7 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 					}
 				}
 				*cValue = MakeNullValue()
-				ts.internError("WrongEnumValueForEnumType", s.S, d.Name.S, PosList{s.P}, pathB.GetPath())
+				ts.internError("WrongEnumValueForEnumType", s.S, d.Name.S, nil, pathB.GetPath())
 			default:
 				ts.internError("NonEnumValueForEnumType", d.Name.S, "", nil, pathB.GetPath())
 			}
@@ -4606,7 +4606,7 @@ func (ts *typeSystem) coerceValue (value Value, targetType Type, cValue *Value, 
 				for f := val.First(); f != nil; f = val.Next(f) {
 					var fd *InputValueDefinition
 					if !getInputField(d.InFieldsDef, f.Name, &fd) {
-						ts.internError("IsNotFieldFor", f.Name.S, d.Name.S, PosList{f.Name.P}, pathB.GetPath())
+						ts.internError("IsNotFieldFor", f.Name.S, d.Name.S, nil, pathB.GetPath())
 						return false
 					}
 				}

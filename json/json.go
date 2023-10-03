@@ -274,6 +274,7 @@ func SetValue (o *Object, name string, value Value) {
 	f := getField(o, name)
 	if f == nil {
 		o.Fields = append(o.Fields, &Field{Name: name, Value: value})
+		return
 	}
 	f.Value = value
 }

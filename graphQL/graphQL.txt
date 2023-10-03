@@ -547,10 +547,6 @@ func (pb *PathBuilder) PushPathNb(n int) *PathBuilder
 
 func (pb *PathBuilder) GetPath() Path
 
-func (ts *errorT) Error(mes string, pos *PosT, path Path)
-
-func (ts *errorT) MappedError(mes, aux1, aux2 string, pos *PosT, path Path)
-
 func PrintDocument(w io.Writer, doc *Document)
 
 func Compile(r io.Reader) (*Document, Response)
