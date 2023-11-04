@@ -1434,8 +1434,7 @@ func (c *compilation) Compile (co *Compiler, lockIfError bool) bool {
 	return !(c.yAErreurI || c.yAEuErreur)
 }
 	
-// Extracts an Object of an ObjectsList: l: the list num: the index in the list (1 first). num must be strictly positive and not greater than the number of Objects in l. 
-
+// Extracts an Object of an ObjectsList: 'l', the list; 'num', the index in the list (1 first). num must be strictly positive and not greater than the number of Objects in l. 
 func Parameter (l ObjectsList, num int) *Object {
 	M.Assert(l != nil, 20)
 	M.Assert(num > 0, num, 21)
@@ -1444,7 +1443,6 @@ func Parameter (l ObjectsList, num int) *Object {
 }
 
 // Gives the type of content of an Object: stringObj, userObj, termObj or nulObj. 
-
 func (o *Object) ObjType () (t int8) {
 	switch o.o.(type) {
 		case *objetCOChaineObj:
@@ -1460,7 +1458,6 @@ func (o *Object) ObjType () (t int8) {
 }
 
 // Gives the number of an userObj or termObj Object. 
-
 func (o *Object) ObjNum () int {
 	switch oo := o.o.(type) {
 		case *objetCOUtilObj:
@@ -1474,7 +1471,6 @@ func (o *Object) ObjNum () int {
 }
 
 // Gives the number of the hard or soft function which created the userObj or termObj Object.
-
 func (o *Object) ObjFunc () int {
 	switch oo := o.o.(type) {
 	case *objetCOUtilObj:
@@ -1488,7 +1484,6 @@ func (o *Object) ObjFunc () int {
 }
 
 // Gives the length of the string contained in a stringObj Object. 
-
 func (o *Object) ObjStringLen () int {
 	oo, str := o.o.(*objetCOChaineObj)
 	M.Assert(str, 100)
@@ -1496,7 +1491,6 @@ func (o *Object) ObjStringLen () int {
 }
 
 // Returns, in value, the string contained in a stringObj Object or, else, the value parameter is not changed. 
-
 func (o *Object) ObjString () string {
 	oo, str := o.o.(*objetCOChaineObj)
 	M.Assert(str, 100)
@@ -1504,7 +1498,6 @@ func (o *Object) ObjString () string {
 }
 
 // Gives the data contained in an userObj Object. 
-
 func (o *Object) ObjUser () Anyptr {
 	oo, user := o.o.(*objetCOUtilObj)
 	M.Assert(user, 100)
@@ -1512,7 +1505,6 @@ func (o *Object) ObjUser () Anyptr {
 }
 
 // Gives the number of subtrees of a termObj Object. 
-
 func (o *Object) ObjTermSonsNb () int {
 	oo, term := o.o.(*objetCOTermeObj)
 	M.Assert(term, 100)
@@ -1520,7 +1512,6 @@ func (o *Object) ObjTermSonsNb () int {
 }
 
 // Gives a subtree of a termObj Object: sonNum is the index of the subtree (1 first). sonNum must be strictly positive and not greater than the number of subtrees of o. 
-
 func (o *Object) ObjTermSon (sonNum int) *Object {
 	oo, term := o.o.(*objetCOTermeObj)
 	M.Assert(term, 100)
@@ -1530,27 +1521,23 @@ func (o *Object) ObjTermSon (sonNum int) *Object {
 }
 
 // During a compilation, modifies the value of the lockIfError parameter of the Compile method. 
-
 func (c *compilation) LockIfError (lock bool) {
 	c.bSE = lock
 }
 
 // Activates a serious semantic error: hard functions are no more called.
-
 func (c *compilation) Lock () {
 	c.yAErreurE = true
 	c.yAEuErreur = true
 }
 
 // Stops compilation at once. 
-
 func (c *compilation) StopCompil () {
 	c.Lock()
 	c.stopCompil = true
 }
 
 // Tests whether o has the type nulObj, or the type userObj with error, or the type termObj with error or with a descendant in error. 
-
 func (o *Object) ErrorIn () bool {
 	switch oo := o.o.(type) {
 		case *objetCONulObj:
@@ -1564,7 +1551,6 @@ func (o *Object) ErrorIn () bool {
 }
 
 // Position, numbered from 1, in the parsed text, of a stringObj or userObj Object. 
-
 func (o *Object) Position () int {
 	switch oo := o.o.(type) {
 		case *objetCOChaineObj:
@@ -1578,7 +1564,6 @@ func (o *Object) Position () int {
 }
 
 // Line number, numbered from 1, in the parsed text, of a stringObj or userObj Object. 
-
 func (o *Object) Line () int {
 	switch oo := o.o.(type) {
 		case *objetCOChaineObj:
@@ -1592,7 +1577,6 @@ func (o *Object) Line () int {
 }
 
 // Column number, numbered from 1, in the parsed text, of a stringObj or userObj Object. 
-
 func (o *Object) Column () int {
 	switch oo := o.o.(type) {
 		case *objetCOChaineObj:

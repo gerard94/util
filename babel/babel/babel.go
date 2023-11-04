@@ -155,6 +155,7 @@ func compile1Name (nom string) bool {
 	path, name, ok := compile1Text(input, output, binOutput)
 	if ok {
 		target := R.FindDir(path)
+		fmt.Fprintln(os.Stdout, "Results in ", target)
 		os.MkdirAll(target, 0777)
 		f, err := os.Create(F.Join(target, name + tablesExt))
 		if err == nil {
@@ -188,7 +189,7 @@ func compileList (list []string) {
 func main () {
 	l := os.Args[1:]
 	if len(l) == 0 {
-		fmt.Fprintln(os.Stderr, "$babel {path_from_rsrc_to_babel_file_without_/bab")
+		fmt.Fprintln(os.Stderr, "$babel <path starting with module root to babel file without /rsrc nor /bab>")
 	} else {
 		compileList(l)
 	}

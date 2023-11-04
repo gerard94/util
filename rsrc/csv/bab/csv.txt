@@ -1,0 +1,48 @@
+BABEL "util/csv/csv";
+
+DEFINITION
+
+char = [. ^ ","];
+
+LEXICON
+
+spaces = " "+;
+
+comma = ",";
+
+string = char+;
+eol = $ | [#0, #26];
+
+DECLARATION
+
+* _data(void);
+	_item(val);
+   _line(line, nil);
+
+void = #1;
+
+append = ^101;
+null = ^102;
+record = ^103;
+
+GRAMMAR
+
+_item = comma:
+	$0.val = void;
+_item = string:
+	$0.val = $1;
+_item = string comma:
+	$0.val = $1;
+
+_line = _item:
+	$0.line = append($0.nil, $1.val), $0.nil = null ;
+_line = _line _item:
+	$0.line = append($1.line, $2.val) ;
+
+_data = ;
+_data = _data _line eol:
+	$0.void = record($2.line) ;
+
+AXIOM
+
+_data.

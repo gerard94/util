@@ -1,0 +1,151 @@
+package compil
+
+/*
+The module BabelCompil (Compil for short) is the online part of the Babel subsystem, a compiler compiler. The module BabelBabel converts a grammar written in a text definition document into tables written into a binary file (.tbl extension). Compil is able to read this .tbl file and to parse texts in accordance with provided grammar rules. There are three objects defined in Compil:
+		-	Compiler (a compiler, which represents the content of a .tbl file);
+		-	Compilation (a compilation instance, that one must provide with a compiler and several methods (Read for the reading of text, Execution for the implementation of hard functions ---see below---, Map, optional, for translations of messages, and Error, optional, for errors handling);
+		-	Object (objects produced by the compilation process: strings extracted from text; results of hard functions; trees of Object, recursively produced by soft functions ---see below).
+	Hard and soft functions are defined in grammar definition documents. A hard function is implemented in the Compilation.Execution method and produces an userObj result; a soft function doesn't require any method: it produces a tree (termObj) whose root is the function and whose subtrees are its arguments. TermeObj trees may be used later by hard functions.
+*/
+
+const (
+	
+	// End of file = EOF1 or EOF2 
+	EOF1	rune	= 0x0
+	EOF2	rune	= 0x1a
+	
+	// End of line = EOL1, or EOL2, or EOL1 followed by EOL2 
+	EOL1	rune	= 0x0d
+	EOL2	rune	= 0x0a
+)
+
+const (
+	
+	StringObj	= iota
+	UserObj
+	TermObj
+	NulObj
+
+)
+
+type Anyptr interface{}
+
+// Compiler
+
+type Compiler struct {
+}
+
+// Objects
+
+type (
+	
+	// A list of Object, hard function parameters
+	ObjectsList	[]*Object
+	
+	// An Object, string extracted from the text or result of a hard or soft function
+	Object	struct {
+	}
+
+)
+
+// Compilation
+
+type (
+	
+	Compilationer	interface {
+		
+		// Text reading method: ch is the next character read. When reading after the end of text, ch must return EOF1 or EOF2.
+		Read() (ch rune, cLen int)
+		
+		// Returns the current position in the input stream of chars (origin can have any value).
+		Pos() int
+
+		// Moves the current position in the input stream of chars to pos (origin must be the same than for Pos). pos may extend until the position which follows the end of the text.
+		SetPos(pos int)
+
+		// Execution of hard functions: fNum is the index of the hard function, parsNb is the number of input parameters; pars is the list of input parameters; objPos is an Object whose position in text will be the position of res; res is the result of the hard function.
+		Execution(fNum, parsNb int, pars ObjectsList) (objPos *Object, res Anyptr, ok bool)
+
+		// Lexical and syntactic errors notification: pos position, line line number and col column number of the error; msg is the error message. pos, line and col are numbered from 1.
+		Error(pos, line, col int, msg string)
+
+		// Maps an index text to a more lengthy one. Used to make explicit or to translate error messages.
+		Map(index string) string
+	
+	}
+
+	Compilation	interface {
+		Error(pos, line, col int, msg string)
+		Compile(co *Compiler, lockIfError bool) bool
+		LockIfError(lock bool)
+		Lock()
+		StopCompil()
+	}
+)
+
+// Directory
+
+type (
+	
+	// Reads next integer in the binary file built by module BabelBabel
+	Directorier	interface {
+		ReadInt() int32
+	}
+	
+	// Compiler factory
+	Directory	interface {
+		ReadCompiler() *Compiler
+	}
+
+)
+
+func NewCompilation(c Compilationer) Compilation
+
+func NewDirectory(d Directorier) Directory
+
+// Extracts an Object of an ObjectsList: l: the list num: the index in the list (1 first). num must be strictly positive and not greater than the number of Objects in l. 
+func Parameter(l ObjectsList, num int) *Object
+
+// Gives the type of content of an Object: stringObj, userObj, termObj or nulObj. 
+func (o *Object) ObjType() (t int8)
+
+// Gives the number of an userObj or termObj Object. 
+func (o *Object) ObjNum() int
+
+// Gives the number of the hard or soft function which created the userObj or termObj Object.
+func (o *Object) ObjFunc() int
+
+// Gives the length of the string contained in a stringObj Object. 
+func (o *Object) ObjStringLen() int
+
+// Returns, in value, the string contained in a stringObj Object or, else, the value parameter is not changed. 
+ffunc (o *Object) ObjString() string
+
+// Gives the data contained in an userObj Object. 
+func (o *Object) ObjUser() Anyptr
+
+// Gives the number of subtrees of a termObj Object. 
+func (o *Object) ObjTermSonsNb() int
+
+// Gives a subtree of a termObj Object: sonNum is the index of the subtree (1 first). sonNum must be strictly positive and not greater than the number of subtrees of o. 
+func (o *Object) ObjTermSon(sonNum int) *Object
+
+// During a compilation, modifies the value of the lockIfError parameter of the Compile method. 
+func (c *compilation) LockIfError(lock bool)
+
+// Activates a serious semantic error: hard functions are no more called.
+func (c *compilation) Lock()
+
+// Stops compilation at once. 
+func (c *compilation) StopCompil()
+
+// Tests whether o has the type nulObj, or the type userObj with error, or the type termObj with error or with a descendant in error. 
+func (o *Object) ErrorIn() bool
+
+// Position, numbered from 1, in the parsed text, of a stringObj or userObj Object. 
+func (o *Object) Position() int
+
+// Line number, numbered from 1, in the parsed text, of a stringObj or userObj Object. func (o *Object) Line() int
+
+// Column number, numbered from 1, in the parsed text, of a stringObj or userObj Object. 
+func (o *Object) Column() int

@@ -1,0 +1,152 @@
+package csv
+
+import (
+	
+	C	"git.duniter.org/gerard94/util/babel/compil"
+	M	"git.duniter.org/gerard94/util/misc"
+	R	"git.duniter.org/gerard94/util/resources"
+		"bufio"
+		"io"
+		"os"
+
+)
+
+const (
+	
+	compPath = "util/csv/csv.tbl"
+
+)
+
+type (
+	
+	Line []string
+	
+	Csv []Line
+	
+	directory struct { //C.Directory
+		r *bufio.Reader
+	}
+	
+	compilationer struct {
+		r []rune
+		size,
+		pos int
+		csv Csv
+	}
+
+)
+
+var (
+	
+	rsrcCompPath = R.FindDir(compPath)
+	comp *C.Compiler
+
+)
+
+func (d *directory) ReadInt () int32 {
+	m := uint32(0)
+	p := uint(0)
+	for i := 0; i < 4; i++ {
+		n, err := d.r.ReadByte()
+		M.Assert(err == nil, err, 100)
+		m += uint32(n) << p
+		p += 8
+	}
+	return int32(m)
+} //ReadInt
+
+func (c *compilationer) Read () (ch rune, cLen int) {
+	if c.pos >= c.size {
+		ch = C.EOF1
+	} else {
+		ch = c.r[c.pos]
+		c.pos++
+	}
+	cLen = 1
+	return
+} //Read
+
+func (c *compilationer) Pos () int {
+	return c.pos
+} //Pos
+
+func (c *compilationer) SetPos (pos int) {
+	c.pos = M.Min(pos, c.size)
+} //SetPos
+
+func (c *compilationer) Error (pos, line, col int, msg string) {
+}
+
+func (c *compilationer) Map (index string) string {
+	return index
+}
+
+func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.Object, res C.Anyptr, ok bool) {
+	
+	const (
+		
+		appendC = 101
+		null = 102
+		record = 103
+	
+	)
+	
+	switch fNum {
+	case appendC:
+		o = C.Parameter(pars, 1)
+		line := *o.ObjUser().(*Line)
+		o1 := C.Parameter(pars, 2)
+		typ := o1.ObjType()
+		switch typ {
+		case C.TermObj:
+			line = append(line, "")
+		case C.StringObj:
+			val := o1.ObjString()
+			line = append(line, val)
+		default:
+			M.Halt(typ, 100)
+		}
+		res = &line
+	case null:
+		line := make(Line, 0)
+		res = &line
+	case record:
+		o = C.Parameter(pars, 1)
+		line := *o.ObjUser().(*Line)
+		c.csv = append(c.csv, line)
+	}
+	ok = true
+	return
+} //Execution
+
+func Compile (rs io.ReadSeeker) Csv {
+	n, err := rs.Seek(0, io.SeekEnd); M.Assert(err == nil, err, 100)
+	_, err = rs.Seek(0, io.SeekStart); M.Assert(err == nil, err, 101)
+	b := make([]byte, n)
+	_, err = io.ReadFull(rs, b); M.Assert(err == nil, err, 102)
+	r := []rune(string(b))
+	co := &compilationer{r: r, size: len(r), pos: 0, csv: make(Csv, 0)}
+	c := C.NewCompilation(co)
+	if c.Compile(comp, true) {
+		return co.csv
+	}
+	return nil
+} //Compile
+
+func CompileFile (path string) Csv {
+	f, err := os.Open(path); M.Assert(err == nil, err, 100)
+	defer f.Close()
+	return Compile(f)
+}
+
+func SetRComp (rComp io.Reader) {
+	comp = C.NewDirectory(&directory{r: bufio.NewReader(rComp)}).ReadCompiler()
+}
+
+func init () {
+	f, err := os.Open(rsrcCompPath)
+	if err == nil {
+		defer f.Close()
+		SetRComp(f)
+	}
+}

@@ -18,6 +18,7 @@ import (
 	A "git.duniter.org/gerard94/util/avl"
 	B "git.duniter.org/gerard94/util/babel/compil"
 	M	"git.duniter.org/gerard94/util/misc"
+	R	"git.duniter.org/gerard94/util/resources"
 		"bufio"
 		"io"
 		"os"
@@ -124,6 +125,7 @@ func (c *compilation) Map (index string) (val string) {
 }
 
 func setGram (name string) *B.Compiler {
+	name = R.FindDir(name)
 	f, err := os.Open(name)
 	M.Assert(err == nil, err, 100)
 	d := B.NewDirectory(&directory{r: bufio.NewReader(f)})
@@ -143,7 +145,7 @@ func setReader (name string) ([]rune) {
 
 func main () {
 	if len(os.Args) != 3 {
-		fmt.Println("$testgram compiler.tbl text")
+		fmt.Println("$testgram <rsrc path to compiler.tbl> <path to the text to verify>")
 		return
 	}
 	comp := setGram(os.Args[1])
