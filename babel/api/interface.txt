@@ -1,46 +1,73 @@
+/*
+Babel: a compiler compiler.
+
+Copyright (C) 2001-2020 Gérard Meunier
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
 package api
 
+// The module BabelInterface is part of the Babel subsystem, a compiler compiler. BabelInterface is the programming interface corresponding (and called by) the user interface BabelBabel. It builds a tbl file from a definition document.
+
 const (
+
+	// Indicates that compilation was done without display of comments.
 	WithoutDisp	= iota
 
+	// Indicates the production of remarks during compilation ...
 	Remarks
 
+	// ... or of warnings ...
 	Warnings
 
+	// ... or of error messages.
 	Errors
 )
 
 type (
 	Facer	interface {
+
+		// Method for writing a string in the text of comments.
 		String(s string)
 
+		// Method for writing an end of line in the text of comments.
 		Ln()
 
+		// Maps an index text to a more lengthy one, replacing ^0, ^1, etc... occurrences by p's values, without any modification of the latter strings. Used to make explicit or to translate error messages.
 		Map(index string, p ...string) string
 
+		// Method for writing in the binary file; i: next integer to write.
 		BinInt(i int32)
 
+		// Method for reading the parsed text; ch is the next parsed character.
 		Read() (ch rune, cLen int)
 
+		// Returns the running position in the parsed text (any origin is allowed).
 		Pos() int
 
+		// Moves the running position in the parsed text to pos (the origin must be the same than for Pos).
 		SetPos(pos int)
 	}
 
 	Face	struct {
 		Facer
-		// contains filtered or unexported fields
 	}
 )
 
 func (f *Face) Int(n int)
 
-func (se *semI) Map(index string) string
-
+// Reports an error which takes place at position p, line l and column c in the parsed text. mes is the error message. The implemented procedure writes these informations with f.String, f.Ln and f.Map.
 func (f *Face) Error(p, l, c int, mes string)
 
+// Compiles a definition document, builds from this document a compiler, writes possibly comments and returns in res a value (equal to WithoutDisp, Remarks, Warnings or Errors) indicating the state of compilation. If Errors is returned, the compiler was not created. If another value that WithoutDisp is returned, a text of comments were written by the Face.String and Face.Ln methods. The definition text is read by Face.Read, with the help of Face.Pos and Face.SetPos. name returns the name of the document, as written after the first keyword BABEL.
 func (f *Face) CompComp() (name string, res int8)
 
+// Writes the binary file, corresponding to the compiler created by Face.CompComp, using the Face.BinInt method.
 func (f *Face) OutComp()
 
 func NewFace(f Facer) *Face

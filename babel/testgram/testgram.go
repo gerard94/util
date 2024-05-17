@@ -108,7 +108,7 @@ func (comp *compilation) Error (p int, li, co int, msg string) {
 	}
 }
 
-func (c *compilation) Map (index string) (val string) {
+func (c *compilation) Map (index string, p ...string) (val string) {
 	switch index {
 		case "CForbidden":
 			val = "Unexpected character."

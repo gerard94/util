@@ -12,7 +12,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 package api
 	
-// The module BabelInit0 is part of the Babel subsystem, a compiler compiler. BabelInit0 contains a hard coded version of the tbl file corresponding to the definition document BabelSrc.odc. This hard code has been produced by the module BabelBinText.
+// This file is part of the Babel subsystem, a compiler compiler. It contains a hard coded version of the tbl file corresponding to the definition document util/rsrc/babel/bab/babel.txt. This hard code has been produced by the module BabelBinGoText.
 
 func fillArray () (compiler [5480]int32) {
 	compiler = [5480]int32{

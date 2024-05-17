@@ -1,6 +1,9 @@
 query IntrospectionQuery {
 	__schema {
 		description
+		types {
+			...FullType
+		}
 		queryType {
 			name
 		}
@@ -9,9 +12,6 @@ query IntrospectionQuery {
 		}
 		subscriptionType {
 			name
-		}
-		types {
-			...FullType
 		}
 		directives {
 			name
@@ -41,10 +41,10 @@ fragment FullType on __Type {
 		isDeprecated
 		deprecationReason
 	}
-	inputFields {
-		...InputValue
-	}
 	interfaces {
+		...TypeRef
+	}
+	possibleTypes {
 		...TypeRef
 	}
 	enumValues(includeDeprecated: true) {
@@ -53,9 +53,10 @@ fragment FullType on __Type {
 		isDeprecated
 		deprecationReason
 	}
-	possibleTypes {
-		...TypeRef
+	inputFields {
+		...InputValue
 	}
+	specifiedByURL
 }
 
 fragment InputValue on __InputValue {

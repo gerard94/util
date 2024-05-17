@@ -143,7 +143,7 @@ func compile1Text (input io.ReadSeeker, output, binOutput io.Writer) (path, name
 func compile1Name (nom string) bool {
 	path, name := decompNom(nom, sourcesPath)
 	fmt.Fprint(os.Stderr, "\t", nom, ": ")
-	target := F.Join(R.FindDir(path), name + sourcesExt)
+	target := R.FindDir(F.Join(path, name + sourcesExt))
 	input, err := os.Open(target)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, target, lang.Map("#babel:BNotFound"))
@@ -189,7 +189,7 @@ func compileList (list []string) {
 func main () {
 	l := os.Args[1:]
 	if len(l) == 0 {
-		fmt.Fprintln(os.Stderr, "$babel <path starting with module root to babel file without /rsrc nor /bab>")
+		fmt.Fprintln(os.Stderr, "$babel <path starting with module root, included, to babel file without /rsrc nor /bab>")
 	} else {
 		compileList(l)
 	}

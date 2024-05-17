@@ -346,7 +346,7 @@ type (
 		Error (pos, line, col int, msg string)
 		
 		// Maps an index text to a more lengthy one. Used to make explicit or to translate error messages.
-		Map (index string) string
+		Map (index string, p ...string) string
 	
 	}
 	

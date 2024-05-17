@@ -2,7 +2,9 @@ BABEL "util/csv/csv";
 
 DEFINITION
 
-char = [. ^ ","];
+quote = '"';
+char = [. ^ ",",'"'];
+charInPars = [. ^ '"'] | '""';
 
 LEXICON
 
@@ -10,14 +12,14 @@ spaces = " "+;
 
 comma = ",";
 
-string = char+;
-eol = $ | [#0, #26];
+string = char+ | quote charInPars* quote;
+eol = $;
 
 DECLARATION
 
-* _data(void);
-	_item(val);
-   _line(line, nil);
+  _data(void);
+  _item(val);
+*_line(line);
 
 void = #1;
 
@@ -34,14 +36,17 @@ _item = string:
 _item = string comma:
 	$0.val = $1;
 
-_line = _item:
-	$0.line = append($0.nil, $1.val), $0.nil = null ;
+_line = :
+	$0.line = null ;
 _line = _line _item:
 	$0.line = append($1.line, $2.val) ;
 
-_data = ;
-_data = _data _line eol:
-	$0.void = record($2.line) ;
+_data = _line:
+	$0.void = record($1.line) ;
+_data = _line eol:
+	$0.void = record($1.line) ;
+_data = _line eol _data:
+	$0.void = record($1.line) ;
 
 AXIOM
 

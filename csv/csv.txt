@@ -1,0 +1,13 @@
+package csv
+
+type (
+	Line []string
+
+	Csv []Line
+)
+
+func Compile(rs io.ReadSeeker) Csv
+
+func CompileFile(path string) Csv
+
+func SetRComp(rComp io.Reader)

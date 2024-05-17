@@ -1363,7 +1363,7 @@ func (comp *compilationer) Error (p, li, co int, mes string) {
 	}
 } //Error
 
-func (c *compilationer) Map (index string) string {
+func (c *compilationer) Map (index string, p ...string) string {
 	return lang.Map("#util/babel:" + index)
 } //Map
 
@@ -5111,7 +5111,7 @@ func (ts *typeSystem) resolveFieldValue (objectType *ObjectTypeDefinition, objec
 				return MakeBooleanValue(f.isDeprecated)
 			case "deprecationReason":
 				if f.deprecationReason == nil {
-					return MakeStringValue("")
+					return MakeNullValue()
 				}
 				return makeStringValue(f.deprecationReason)
 			default:
@@ -5148,7 +5148,7 @@ func (ts *typeSystem) resolveFieldValue (objectType *ObjectTypeDefinition, objec
 				return MakeBooleanValue(enum.isDeprecated)
 			case "deprecationReason":
 				if enum.deprecationReason == nil {
-					return MakeStringValue("")
+					return MakeNullValue()
 				}
 				return makeStringValue(enum.deprecationReason)
 			default:

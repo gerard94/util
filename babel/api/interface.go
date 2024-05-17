@@ -117,7 +117,7 @@ func (f *Face) binStr (s string) {
 
 func (f *Face) Int (n int) {
 	f.String(cardToStr(n))
-}
+} // Int
 
 func (so *sorties) sString (s string) {
 	so.f.String(s)
@@ -131,8 +131,8 @@ func (so *sorties) sMap (index string, p ... string) string {
 	return so.f.Map(index, p ...)
 } // sMap
 
-func (se *semI) Map (index string) string {
-	return se.so.sMap(index)
+func (se *semI) Map (index string, p ... string) string {
+	return se.so.sMap(index, p ...)
 } // Map
 
 // Reports an error which takes place at position p, line l and column c in the parsed text. mes is the error message. The implemented procedure writes these informations with f.String, f.Ln and f.Map.

@@ -5,9 +5,12 @@ import (
 	C	"git.duniter.org/gerard94/util/babel/compil"
 	M	"git.duniter.org/gerard94/util/misc"
 	R	"git.duniter.org/gerard94/util/resources"
+	SM	"git.duniter.org/gerard94/util/strMapping"
 		"bufio"
+		"fmt"
 		"io"
 		"os"
+		"strings"
 
 )
 
@@ -38,6 +41,7 @@ type (
 
 var (
 	
+	lang = SM.NewStdLanguage()
 	rsrcCompPath = R.FindDir(compPath)
 	comp *C.Compiler
 
@@ -71,14 +75,17 @@ func (c *compilationer) Pos () int {
 } //Pos
 
 func (c *compilationer) SetPos (pos int) {
-	c.pos = M.Min(pos, c.size)
+	if pos <= c.size {
+		c.pos = pos
+	}
 } //SetPos
 
 func (c *compilationer) Error (pos, line, col int, msg string) {
+	fmt.Printf("\n***CSV ERROR***: %v:%v: %v\n", line, col, msg)
 }
 
-func (c *compilationer) Map (index string) string {
-	return index
+func (c *compilationer) Map (index string, p ...string) string {
+	return lang.Map("#babel:" + index, p ...)
 }
 
 func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.Object, res C.Anyptr, ok bool) {
@@ -94,25 +101,41 @@ func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.O
 	switch fNum {
 	case appendC:
 		o = C.Parameter(pars, 1)
-		line := *o.ObjUser().(*Line)
+		line := o.ObjUser().(Line)
 		o1 := C.Parameter(pars, 2)
 		typ := o1.ObjType()
 		switch typ {
 		case C.TermObj:
 			line = append(line, "")
+			res = line
 		case C.StringObj:
 			val := o1.ObjString()
+			if val[0] == '"' {
+				b := []rune(val)
+				b = b[1:len(b) - 1]
+				bb := make([]rune, 0)
+				for i := 0; i < len(b); {
+					bb = append(bb, b[i])
+					if b[i] == '"' {
+						M.Assert(i < len(b) - 1 && b[i + 1] == '"', string(b), i, 100)
+						i += 2
+					} else {
+						i++
+					}
+				}
+				val = string(bb)
+			}
 			line = append(line, val)
 		default:
 			M.Halt(typ, 100)
 		}
-		res = &line
+		res = line
 	case null:
 		line := make(Line, 0)
-		res = &line
+		res = line
 	case record:
 		o = C.Parameter(pars, 1)
-		line := *o.ObjUser().(*Line)
+		line := o.ObjUser().(Line)
 		c.csv = append(c.csv, line)
 	}
 	ok = true
@@ -128,13 +151,25 @@ func Compile (rs io.ReadSeeker) Csv {
 	co := &compilationer{r: r, size: len(r), pos: 0, csv: make(Csv, 0)}
 	c := C.NewCompilation(co)
 	if c.Compile(comp, true) {
-		return co.csv
+		n := len(co.csv)
+		csv := make(Csv, n)
+		for i, cs := range co.csv {
+			csv[n - 1 - i] = cs
+		}
+		return csv
 	}
 	return nil
 } //Compile
 
+func CompileString (s string)  Csv {
+	return Compile(strings.NewReader(s))
+} //CompileString
+
 func CompileFile (path string) Csv {
-	f, err := os.Open(path); M.Assert(err == nil, err, 100)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
 	defer f.Close()
 	return Compile(f)
 }

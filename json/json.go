@@ -32,14 +32,14 @@ import (
 
 const (
 	
-	double_quote = rune(0x22)
-	reverse_solidus = rune(0x5C)
-	solidus = rune(0x2F)
-	backspace = rune(0x08)
-	form_feed = rune(0x0C)
-	line_feed = rune(0x0A)
-	carriage_return = rune(0x0D)
-	horizontal_tab = rune(0x09)
+	double_quote = '\x22'
+	reverse_solidus = '\x5C'
+	solidus = '\x2F'
+	backspace = '\x08'
+	form_feed = '\x0C'
+	line_feed = '\x0A'
+	carriage_return = '\x0D'
+	horizontal_tab = '\x09'
 	
 	jsonDir = "util/json" // Directory of JSON resources files
 	compName = "json.tbl" // Json compiler
@@ -252,7 +252,7 @@ func (a *Array) GetArray () *Array {
 }
 
 func getField (o *Object, name string) *Field {
-	if o != nil {
+	if o != nil && o.Fields != nil {
 		for _, f := range o.Fields {
 			if f.Name == name {
 				return f
@@ -314,6 +314,36 @@ func GetJson (v Value) (Json, bool) {
 
 func SetJson (j Json) Value {
 	return &JsonVal{Json: j}
+}
+
+func GetObject (v Value) *Object {
+	if v == nil {
+		return nil;
+	}
+	j, ok := v.(*JsonVal)
+	if !ok || j == nil || j.Json == nil {
+		return nil
+	}
+	o, ok := j.Json.(*Object)
+	if !ok {
+		return nil
+	}
+	return o
+}
+
+func GetArray (v Value) *Array {
+	if v == nil {
+		return nil;
+	}
+	j, ok := v.(*JsonVal)
+	if !ok || j == nil || j.Json == nil {
+		return nil
+	}
+	a, ok := j.Json.(*Array)
+	if !ok {
+		return nil
+	}
+	return a
 }
 
 func GetString (v Value) (string, bool) {
@@ -426,7 +456,7 @@ func (c *compilationer) SetPos (pos int) {
 func (c *compilationer) Error (pos, line, col int, msg string) {
 }
 
-func (c *compilationer) Map (index string) string {
+func (c *compilationer) Map (index string, p ...string) string {
 	return index
 }
 

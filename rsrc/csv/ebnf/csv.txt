@@ -1,0 +1,16 @@
+EBNF UtilCsv:
+(* RFC 4180 *)
+
+file = [header CRLF] record {CRLF record} [CRLF].
+header = name {COMMA name}.
+record = field {COMMA field}.
+name = field.
+field = escaped | non_escaped.
+escaped = DQUOTE {TEXTDATA | COMMA | CR | LF | DQUOTE DQUOTE} DQUOTE.
+non_escaped = {TEXTDATA}.
+COMMA = &#2CH&.
+CR = &#0DH&.
+DQUOTE =  &#22H&.
+LF = &#0AH&.
+CRLF = &CR LF&.
+TEXTDATA =  &[#20H-#21H, #23H-#2BH, #2DH-#7EH]&.
