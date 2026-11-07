@@ -1,4 +1,4 @@
-package storage
+package storage1
 
 import (
 	M	"git.duniter.org/gerard94/util/misc"
@@ -8,6 +8,7 @@ import (
 )
 
 func TestRecHeap (t *testing.T) {
+	fmt.Println("TestRecHeap")
 	var n int
 	heap := NewRecHeap(U.Sizeof(n), U.Alignof(n))
 	s := [...]int{4, 6, 9, 0, 1, 3, 5}
@@ -37,6 +38,7 @@ func TestRecHeap (t *testing.T) {
 }
 
 func TestArrHeap (t *testing.T) {
+	fmt.Println("TestArrHeap")
 	var n int
 	heap := NewArrHeap(U.Sizeof(n), U.Alignof(n))
 	a := (*[9]int)(U.Pointer(heap.NewArr(9)))

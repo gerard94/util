@@ -2,6 +2,18 @@ EBNF UtilGraphQL:
 
 (* Version October 2021 *)
 
+(*
+Comment :: `#` CommentChar*
+
+CommentChar :: SourceCharacter but not LineTerminator
+
+GraphQL source documents may contain single-line comments, starting with the {`#`} marker.
+
+A comment can contain any Unicode code point except {LineTerminator} so a comment always consists of all code points starting with the {`#`} character up to but not including the line terminator.
+
+Comments behave like white space and may appear after any token, or before a line terminator, and have no significance to the semantic meaning of a GraphQL Document.
+*)
+
 (* Possible axioms: Document, ExecutableDocument, TypeSystemDocument, TypeSystemExtensionDocument *)
 
 {

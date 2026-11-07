@@ -56,7 +56,7 @@ fragment FullType on __Type {
 	inputFields {
 		...InputValue
 	}
-	specifiedByURL
+	specifiedByUrl
 }
 
 fragment InputValue on __InputValue {

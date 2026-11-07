@@ -20,6 +20,10 @@ const (
 var srcPath2 = R.FindDir(path2)
 
 func TestWrite1 (t *T.T) {
+	fmt.Fprintln(os.Stdout)
+	fmt.Fprintln(os.Stdout, "TestWrite1")
+	fmt.Fprintln(os.Stdout)
+	
 	doc, _ := ReadGraphQL(path1); M.Assert(doc != nil, 100);
 	doc.WriteFlat(os.Stdout)
 	fmt.Fprintln(os.Stdout)
@@ -29,6 +33,10 @@ func TestWrite1 (t *T.T) {
 }
 
 func TestWrite2 (t *T.T) {
+	fmt.Fprintln(os.Stdout)
+	fmt.Fprintln(os.Stdout, "TestWrite2")
+	fmt.Fprintln(os.Stdout)
+	
 	fmt.Fprintln(os.Stdout)
 	doc, _ := ReadGraphQL(srcPath2); M.Assert(doc != nil, 100);
 	doc.WriteFlat(os.Stdout)

@@ -4,34 +4,12 @@ import (
 	
 	"testing"
 	"fmt"
+	"time"
 
 )
 
 func TestVersion (t *testing.T) {
 	fmt.Println("Version =", Version())
-}
-
-func Test1 (t *testing.T) {
-	fmt.Println()
-	
-	fmt.Println("MinInt8 =", MinInt8)
-	fmt.Println("MaxInt8 =", MaxInt8)
-	fmt.Println("MinInt16 =", MinInt16)
-	fmt.Println("MaxInt16 =", MaxInt16)
-	fmt.Println("MinInt32 =", MinInt32)
-	fmt.Println("MaxInt32 =", MaxInt32)
-	fmt.Println("MaxInt64 =", MaxInt64)
-	fmt.Println("MinInt64 =", MinInt64)
-	
-	fmt.Println("MinUint8 =", MinUint8)	
-	fmt.Println("MaxUint8 =", MaxUint8)
-	fmt.Println("MinUint16 =", MinUint16)	
-	fmt.Println("MaxUint16 =", MaxUint16)
-	fmt.Println("MinUint32 =", MinUint32)	
-	fmt.Println("MaxUint32 =", MaxUint32)
-	fmt.Println("MinUint64 =", MinUint64)	
-	fmt.Println("MaxUint64 =", MaxUint64)
-
 }
 
 func Test2 (t *testing.T) {
@@ -46,4 +24,14 @@ func TestOdd (t *testing.T) {
 	Want(Odd(1), t)
 	Want(!Odd(1000), t)
 	Want(Odd(1001), t)
+}
+
+func TestTimeStamp (t *testing.T) {
+	ts1 := int64(time.Now().Unix())
+	fmt.Println("Time1 =", ts1)
+	year, month, day, hour, minute, second := Time2Timestamp(ts1)
+	fmt.Printf("%v/%v/%v-%v:%v:%v\n", day, month, year, hour, minute, second)
+	ts2 := Timestamp2Time(year, month, day, hour, minute, second)
+	fmt.Println("Time2 =", ts2)
+	Assert(ts1 == ts2)
 }

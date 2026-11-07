@@ -24,6 +24,7 @@ import (
 
 	A	"git.duniter.org/gerard94/util/avl"
 	M	"git.duniter.org/gerard94/util/misc"
+		"math"
 		//"time"
 		/*
 		"fmt"
@@ -371,7 +372,7 @@ const (
 	elemSize = LIS + SIS
 	
 	// Minimal number of elements in a btree page
-	minEl = (M.MaxInt8 - 1) / 2 // 63
+	minEl = (math.MaxInt8 - 1) / 2 // 63
 
 )
 
@@ -1302,7 +1303,7 @@ func (fac *Factory) OpenBase (nF string, pageNb int) *Database {
 	base.ref.PosWriter(FilePos((base.placeNb + 1) * LIS + 3 * INS))
 	base.ref.writeBool(true)
 	base.end = base.ref.End()
-	base.pageNb = M.Max(pageNb, minPageNb)
+	base.pageNb = max(pageNb, minPageNb)
 	base.pages = A.New()
 	base.pagesRing = new(pageT)
 	base.pagesRing.nextP = base.pagesRing
@@ -2114,7 +2115,7 @@ func (ind *Index) adjustKeysSize (p *pageI, extra int) {
 	l2 := l + extra // New content size
 	if l2 > l1 {
 		l1 = (l2 + sectSize - 1) / sectSize * sectSize
-		M.Assert(l1 <= M.MaxInt16 + 1, 100)
+		M.Assert(l1 <= math.MaxInt16 + 1, 100)
 		var nKeys FilePos
 		nK := ind.baseI.newDiskPage(l1, kf, &nKeys).(*keyCont)
 		nC := nK.c

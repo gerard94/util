@@ -14,7 +14,7 @@ type (
 )
 
 func (q *QueueLim[T]) Init (n int) {
-	*q = QueueLim[T]{set: make(elemSet[T], n + 1), size: n + 1, front: 0, rear: 0}
+	(*q) = QueueLim[T]{set: make(elemSet[T], n + 1), size: n + 1, front: 0, rear: 0}
 } //Init
 
 func NewLim [T any] (n int) *QueueLim[T] {
@@ -23,11 +23,11 @@ func NewLim [T any] (n int) *QueueLim[T] {
 	return q
 } //NewLim
 
-func (q *QueueLim[T]) IsEmpty () bool {
+func (q QueueLim[T]) IsEmpty () bool {
 	return q.rear == q.front
 } //IsEmpty
 
-func (q *QueueLim[T]) IsFull () bool {
+func (q QueueLim[T]) IsFull () bool {
 	return (q.rear + 1) % q.size == q.front
 } //IsFull
 

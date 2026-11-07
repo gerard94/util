@@ -10,9 +10,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-package storage
-
 /* This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed. */
+package storage2
+
+/* Incorrect alignment */
 
 import (
 	"unsafe"
@@ -31,7 +32,7 @@ type (
 	
 	Address = *byte // Must be converted to the right pointer type
 	
-	// A heap block, allocated on Blackbox heap when needed
+	// A heap block, allocated on system heap when needed
 	heapBlock struct {
 		next *heapBlock // Blocks are linked together, so that they can't be collected
 		h []byte // Allocations happen here
@@ -107,7 +108,7 @@ func (heap *RecHeap) DisposeRec (a *Address) {
 
 // Initialize a blockElem
 func initBlockElem (el *blockElem, elemSize, elemNb int) {
-	el.arrSize = M.Max(elemNb * elemSize, addressSize)
+	el.arrSize = max(elemNb * elemSize, addressSize)
 	el.blockSize = heapSizeMax / el.arrSize * el.arrSize
 	el.head = nil // No free cell yet
 }
@@ -160,7 +161,7 @@ func NewRecHeap (recSize int, align uintptr) (heap *RecHeap) {
 	M.Assert(recSize > 0, 20)
 	M.Assert(recSize <= heapSizeMax, 21)
 	heap = new(RecHeap); M.Assert(heap != nil, 100)
-	recSize = M.Max(recSize, addressSize) // Must keep room for free cells and their integer links
+	recSize = max(recSize, addressSize) // Must keep room for free cells and their integer links
 	heap.recSize = recSize
 	heap.blockSize = heapSizeMax / recSize * recSize
 	heap.h = nil // No block yet...

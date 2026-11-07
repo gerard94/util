@@ -23,30 +23,36 @@ func (i comp) Compare (j comp) Comp {
 	}
 }
 
+/*
 func (i comp) Copy () comp {
 	return i
 }
+*/
 
-var treeCreate func () (*Tree[comp], []comp, int)
+/*
+var treeCreate func () (*TreeSC[comp], []comp, int)
+*/
 
-func treeCreate1 () (*Tree[comp], []comp, int) {
+var treeCreate func () (*TreeS[comp], []comp, int)
+
+func treeCreate1 () (*TreeS[comp], []comp, int) {
 	var values = []comp{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
-	tree := New[comp]()
+	tree := NewS[comp]()
 	for _, val := range values {
-		SearchIns(tree, val)
+		tree.SearchIns(val)
 	}
 	return tree, values, 0
 }
 
-func treeCreate2 () (*Tree[comp], []comp, int){
-	const (nb = 1000; max = 5000)
+func treeCreate2 () (*TreeS[comp], []comp, int){
+	const (nb = 10000; max = 5000)
 	values := make([]comp, nb)
-	tree := New[comp]()
+	tree := NewS[comp]()
 	doublons := 0
 	for i := 0; i < nb; i++ {
 		values[i] = comp(A.IntRand(0, max))
 		//fmt.Println(values[i])
-		if _, ok, _ := SearchIns(tree, values[i]); ok {
+		if _, ok, _ := tree.SearchIns(values[i]); ok {
 			doublons++
 		}
 	}
@@ -105,7 +111,7 @@ func TestPrevious (t *testing.T) {
 
 func TestSearch (t *testing.T) {
 	tree, values, _ := treeCreate()
-	if _, ok, _ := Search(tree, values[len(values)/2]); !ok {
+	if _, ok, _ := tree.Search(values[len(values)/2]); !ok {
 		t.Fail()
 	}
 }
@@ -113,33 +119,33 @@ func TestSearch (t *testing.T) {
 func TestDelete (t *testing.T) {
 	tree, values, _ := treeCreate()
 	val := values[len(values)/2]
-	if !Delete(tree, val) {
+	if !tree.Delete(val) {
 		t.Fail()
 	}
-	if Delete(tree, val) {
+	if tree.Delete(val) {
 		t.Fail()
 	}
-	if _, ok, _ := Search(tree, val); ok {
+	if _, ok, _ := tree.Search(val); ok {
 		t.Fail()
 	}
 }
 
 func TestFind (t *testing.T) {
-	tree, values, _ := treeCreate()
-	if _, ok := tree.Find(len(values) / 2); !ok {
+	tree, _, _ := treeCreate()
+	if _, ok := tree.Find(tree.NumberOfElems() / 2); !ok {
 		t.Fail()
 	}
 }
 
 func TestErase (t *testing.T) {
-	tree, values, _ := treeCreate()
-	rank := len(values)/2
+	tree, _, _ := treeCreate()
+	rank := tree.NumberOfElems()/2
 	val, _ := tree.Find(rank)
-	if _, ok, n := Search(tree, val.Val()); !ok || n != rank {
+	if _, ok, n := tree.Search(val.Val()); !ok || n != rank {
 		t.Fail()
 	}
 	tree.Erase(rank)
-	if _, ok, _ := Search(tree, val.Val()); ok {
+	if _, ok, _ := tree.Search(val.Val()); ok {
 		t.Fail()
 	}
 }
@@ -151,7 +157,7 @@ func doLinearize (v comp, p ...interface{}) {
 	(*i)++
 }
 
-func equalTrees (t1, t2 *Tree[comp]) bool {
+func equalTrees (t1, t2 *TreeS[comp]) bool {
 	if t1.NumberOfElems() != t2.NumberOfElems() {
 		return false
 	}
@@ -168,7 +174,7 @@ func equalTrees (t1, t2 *Tree[comp]) bool {
 	return true
 }
 
-func equalTrees2 [T Comparer[T]] (t1, t2 *Tree[T]) bool {
+func equalTrees2 [T Comparer[T]] (t1, t2 *TreeS[T]) bool {
 	e1 := t1.Next(nil); e2 := t2.Next(nil)
 	for e1 != nil && e2 != nil {
 		if e1.Val().Compare(e2.Val()) != Eq {
@@ -181,13 +187,13 @@ func equalTrees2 [T Comparer[T]] (t1, t2 *Tree[T]) bool {
 
 func TestCopy (t *testing.T) {
 	tree, _, _ := treeCreate()
-	cop := Copy(tree)
+	cop := tree.Copy()
 	if !equalTrees2(tree, cop) {t.Fail()}
 }
 
 func TestSplitCat (t *testing.T) {
 	tree, values, _ := treeCreate()
-	cop := Copy(tree)
+	cop := tree.Copy()
 	if !equalTrees(tree, cop) {
 		t.Fail()
 	}
@@ -209,7 +215,7 @@ func doPrint (i comp, l ...interface{}) {
 	fmt.Println(i)
 }
 
-func ExampleWalkThrough1_2() {
+func ExampleTree_WalkThrough() {
 	tree, _, _  := treeCreate1()
 	tree.WalkThrough(doPrint)
 	// Output:
@@ -228,7 +234,7 @@ func ExampleWalkThrough1_2() {
 	// 13
 }
 
-func doStruct [T Copier[T]] (e *Elem[T], t bool) {
+func doStruct [T any] (e *Elem[T], t bool) {
 	if t {
 		fmt.Print(e.val, " - ", e.rank, " (")
 		fmt.Print(e.left.val, " - ", e.lTag)
@@ -239,7 +245,7 @@ func doStruct [T Copier[T]] (e *Elem[T], t bool) {
 	}
 }
 
-func ExampleWalkThrough() {
+func ExampleTree_WalkThrough_doStruct() {
 	tree, _, _ := treeCreate1()
 	doStruct(tree.root.left, tree.root.lTag)
 	// Output:

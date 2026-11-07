@@ -19,6 +19,7 @@ import (
 	C	"git.duniter.org/gerard94/util/sets"
 	M	"git.duniter.org/gerard94/util/misc"
 	U	"unicode"
+		"math"
 
 )
 
@@ -509,7 +510,7 @@ func calcul (e lexExp, n *int, prof int, profMax *int) {
 	} // faitFollow
 	
 	//calcul
-	*profMax = M.Max(prof, *profMax)
+	*profMax = max(prof, *profMax)
 	switch ee := e.(type) {
 	case *lexExpOrL:
 		calcul(ee.exp1, n, prof, profMax); ec1 := ee.exp1.lexExpCom()
@@ -591,7 +592,7 @@ func (lx *lexical) fabriqueLex () {
 					eA = nil
 					for a != nil {
 						b := a.suivant
-						n := M.MaxInt32
+						n := math.MaxInt32
 						p := a.lllE.etat
 						for p != nil {
 							le := p.lExp

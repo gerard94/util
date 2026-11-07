@@ -2,9 +2,9 @@ package extStrings
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
 	T	"testing"
 		"fmt"
+		"math"
 
 )
 
@@ -39,7 +39,7 @@ func Test1 (tst *T.T) {
 	i := s.Pos(0, "l")
 	for i >= 0 {
 		t = s.Extract(0, i)
-		s = s.Extract(i + 1, M.MaxInt32)
+		s = s.Extract(i + 1, math.MaxInt32)
 		t = t.Cat(u)
 		s = t.Cat(s)
 		i = s.Pos(i + 1, "l")

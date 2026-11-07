@@ -8,6 +8,7 @@ import (
 )
 
 func Test_inSrc (t *testing.T) {
+	fmt.Println("inSrc")
 	root, src := inSrc()
 	fmt.Println("root =", root, "src =", src)
 }

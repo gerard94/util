@@ -54,7 +54,7 @@ func fillDataBase () {
 }
 
 func TestAuthors (t *testing.T) {
-	fmt.Println(TestAuthors)
+	fmt.Println("TestAuthors")
 	fillDataBase()
 	e := db.authors.Next(nil)
 	for e != nil {

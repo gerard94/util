@@ -34,12 +34,6 @@ func (e1 *Elem) Compare (e2 A.Comparer) A.Comp {
 	return A.Eq
 }
 
-// *Elem is a A.Copier
-func (e *Elem) Copy () A.Copier {
-	ee := *e
-	return &ee
-}
-
 // Creates and returns a new empty set.
 func NewSet () *Set {
 	return (*Set)(A.New())
@@ -64,10 +58,8 @@ func (s *Set) Copy () *Set {
 func (s1 *Set) Add (s2 *Set) {
 	t1 := (*A.Tree)(s1)
 	t2 := (*A.Tree)(s2)
-	e := t2.Next(nil)
-	for e != nil {
+	for e := t2.Next(nil); e != nil; e = t2.Next(e) {
 		t1.SearchIns(e.Val().(*Elem))
-		e = t2.Next(e)
 	}
 }
 
@@ -90,26 +82,22 @@ func (s1 *Set) Inter (s2 *Set) *Set {
 	t2 := (*A.Tree)(s2)
 	s := NewSet()
 	t := (*A.Tree)(s)
-	e := t1.Next(nil)
-	for e != nil {
+	for e := t1.Next(nil); e != nil; e = t1.Next(e) {
 		ee := e.Val().(*Elem)
 		if _, found, _ := t2.Search(ee); found {
 			t.SearchIns(ee)
 		}
-		e = t1.Next(e)
 	}
 	return s
 }
 
 // Puts in t the difference between t1 and t2
 func diff (t1, t2, t *A.Tree) {
-	e := t1.Next(nil)
-	for e != nil {
+	for e := t1.Next(nil); e != nil; e = t1.Next(e) {
 		ee := e.Val().(*Elem)
 		if _, found, _ := t2.Search(ee); !found {
 			t.SearchIns(ee)
 		}
-		e = t1.Next(e)
 	}
 }
 

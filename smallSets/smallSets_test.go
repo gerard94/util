@@ -6,12 +6,13 @@ import (
 		"git.duniter.org/gerard94/util/alea"
 		"testing"
 		"fmt"
+		"math"
 
 )
 
 func TestSets (t *testing.T) {
-	s1 := Set(int64(alea.UintRand(0, M.MaxUint64)))
-	s2 := Set(int64(alea.UintRand(0, M.MaxUint64)))
+	s1 := Set(int64(alea.UintRand(0, math.MaxUint64)))
+	s2 := Set(int64(alea.UintRand(0, math.MaxUint64)))
 	sU := s1.Union(s2)
 	sI := s1.Inter(s2)
 	sS := s1.XOR(s2)

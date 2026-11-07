@@ -27,6 +27,9 @@ import (
 		"io"
 		"os"
 		"strings"
+		"unicode"
+		"strconv"
+		"errors"
 
 )
 
@@ -46,20 +49,22 @@ const (
 
 )
 
-const ( //Json
+// Json Kind
+const (
 	
 	ObjectKind = iota
 	ArrayKind
 
 )
 
-const ( //Value
+// Value Kind
+const (
 	
 	JsonKind = iota
 	StringKind
-	IntegerKind
+	IntKind
 	FloatKind
-	BoolKind
+	BooleanKind
 	NullKind
 
 )
@@ -67,7 +72,7 @@ const ( //Value
 type (
 	
 	// For compiler internalizing
-	directory struct { //C.Directory
+	directory struct { // C.Directory
 		r *bufio.Reader
 	}
 	
@@ -87,10 +92,13 @@ type (
 	// A Json may be an 'Object' or an 'Array'
 	Json interface {
 		
+		// 'ObjectKind' or 'ArrayKind'
 		JKind () int
 		
+		// Panic if not 'Object'
 		GetObject () *Object
 		
+		// Panic if not 'Array'
 		GetArray () *Array
 		
 		// 'GetString' returns a formatted string for reading
@@ -107,50 +115,74 @@ type (
 	
 	}
 	
-	Object struct { //Json
+	// Json Object
+	Object struct {
 		Fields Fields
 	}
 	
+	// Fields of Object
 	Fields []*Field
 	
+	// Field of Object
 	Field struct {
 		Name string
 		Value Value
 	}
 	
-	Array struct { //Json
+	// Json Array
+	Array struct {
 		Elements Values
 	}
 	
 	Values []Value
 	
+	// Any 'Value' in 'Object' or 'Array'
 	Value interface {
 		
+		// Value Kind
 		VKind () int
 	
 	}
 	
-	JsonVal struct { //Value
+	// Json Value
+	JsonVal struct {
 		Json Json
 	}
 	
-	String struct { //Value
+	// String Value
+	String struct {
 		S string
 	}
 	
-	Integer struct { //Value
+	// Int Value
+	Int struct {
 		N int64
 	}
 	
-	Float struct { //Value
+	// Float Value
+	Float struct {
 		F float64
 	}
 	
-	Bool struct { //Value
-		Bool bool
+	// Boolean Value
+	Boolean struct {
+		Boolean bool
 	}
 	
-	Null struct { //Value
+	// Null Value
+	Null struct {
+	}
+	
+	// Value returned by 'Find'
+	ValueStruct struct {
+		// Kind of the value (VKind)
+		Kind int
+		// Only one of the following fields is filled, according to 'Kind'
+		Json Json
+		String string
+		Int int64
+		Float float64
+		Boolean bool
 	}
 
 )
@@ -167,26 +199,30 @@ type (
 		nxt stacker
 	}
 	
+	// Beginning of an 'Object' in a 'stack'
 	startObj struct {
 		stack
 	}
 	
+	// Beginning of an 'Array' in a 'stack'
 	startArr struct {
 		stack
 	}
 	
+	// 'Value' in a 'stack'
 	stValue struct {
 		stack
 		val Value
 	}
 	
+	// 'Field' in a 'Stack'
 	stField struct {
 		stack
 		name string
 		value Value
 	}
 	
-	// A 'Maker' builds Json by stack manipulation
+	// A 'Maker' builds 'Json' by stack manipulation
 	Maker struct {
 		stk stacker
 	}
@@ -194,63 +230,79 @@ type (
 )
 
 var (
-		
+	
+	// Directory of Json resources
 	wd = RS.FindDir(jsonDir)
+	// File of Json Compiler
 	compPath = F.Join(wd, compName)
-	comp *C.Compiler // Compiler of json texts
+	// Compiler of json texts
+	comp *C.Compiler
 
 )
 
+// 'Json' kind of an 'Object'
 func (*Object) JKind () int {
 	return ObjectKind
 }
 
+// 'Json' kind of an 'Array'
 func (*Array) JKind () int {
 	return ArrayKind
 }
 
+// 'Value' kind of a 'Json'
 func (*JsonVal) VKind () int {
 	return JsonKind
 }
 
+// 'Value' kind of a 'String'
 func (*String) VKind () int {
 	return StringKind
 }
 
-func (*Integer) VKind () int {
-	return IntegerKind
+// 'Value' kind of an 'Int'
+func (*Int) VKind () int {
+	return IntKind
 }
 
+// 'Value' kind of a 'Float'
 func (*Float) VKind () int {
 	return FloatKind
 }
 
-func (*Bool) VKind () int {
-	return BoolKind
+// 'Value' kind of a 'Boolean'
+func (*Boolean) VKind () int {
+	return BooleanKind
 }
 
+// 'Value' kind of a 'Null'
 func (*Null) VKind () int {
 	return NullKind
 }
 
+// Get an 'Object' out of a 'Json'
 func (o *Object) GetObject () *Object {
 	return o
 }
 
+// Panic if the 'Json' isn't an 'Array'
 func (o *Object) GetArray () *Array {
 	M.Halt(100)
 	return nil
 }
 
+// Panic if the 'Json' isn't an 'Object'
 func (a *Array) GetObject () *Object {
 	M.Halt(100)
 	return nil
 }
 
+// Get an 'Array' out of a 'Json'
 func (a *Array) GetArray () *Array {
 	return a
 }
 
+// 'getField' returns the 'Field' in 'o' whose 'Name' is 'name', or nil if the 'Field' doesn't exist
 func getField (o *Object, name string) *Field {
 	if o != nil && o.Fields != nil {
 		for _, f := range o.Fields {
@@ -262,6 +314,7 @@ func getField (o *Object, name string) *Field {
 	return nil
 }
 
+// 'GetValue' returns the 'Value' in 'o' whose 'Name' is 'name' and true if the search was successful
 func GetValue (o *Object, name string) (Value, bool) {
 	f := getField(o, name)
 	if f == nil {
@@ -270,6 +323,7 @@ func GetValue (o *Object, name string) (Value, bool) {
 	return f.Value, true
 }
 
+// SetValue puts 'value' into the 'Field' of 'o' whose 'Name' is 'name'; if the 'Field' doesn't already exist, it is created
 func SetValue (o *Object, name string, value Value) {
 	f := getField(o, name)
 	if f == nil {
@@ -279,13 +333,15 @@ func SetValue (o *Object, name string, value Value) {
 	f.Value = value
 }
 
-func GetLength (a *Array) int {
-	if a != nil && a.Elements != nil {
+// 'Len' returns the number of elements in 'a', or 0 if 'a' doesn't exist
+func (a *Array) Len () int {
+	if a.Elements != nil {
 		return len(a.Elements)
 	}
 	return 0
 }
 
+// 'GetElem' returns the element of rank 'num' in 'a', and true if this element exists, otherwise the 'Value' returned is nil
 func GetElem (a *Array, num int) (Value, bool) {
 	if a != nil && a.Elements != nil && num >= 0 && num < len(a.Elements) {
 		return a.Elements[num], true
@@ -293,6 +349,7 @@ func GetElem (a *Array, num int) (Value, bool) {
 	return nil, false
 }
 
+// 'SetElem' puts 'value' into the element of rank 'num' in 'a', and returns true if such an element exists, otherwise the operation is unsuccessful
 func SetElem (a *Array, num int, value Value) bool {
 	if a != nil && a.Elements != nil && num >= 0 && num < len(a.Elements) {
 		a.Elements[num] = value
@@ -301,6 +358,7 @@ func SetElem (a *Array, num int, value Value) bool {
 	return false
 }
 
+// 'GetJson' returns the 'Json' contained in 'v', and true if 'v' contains actually a 'Json', otherwise the 'Json' returned is nil
 func GetJson (v Value) (Json, bool) {
 	if v == nil {
 		return nil, false
@@ -312,10 +370,12 @@ func GetJson (v Value) (Json, bool) {
 	return j.Json, true
 }
 
+// 'SetJson' returns a 'Value' containing 'j'
 func SetJson (j Json) Value {
 	return &JsonVal{Json: j}
 }
 
+// 'GetObject' returns the 'Object' in 'v', or nil if 'v' doesn't contain an 'Object'
 func GetObject (v Value) *Object {
 	if v == nil {
 		return nil;
@@ -331,6 +391,7 @@ func GetObject (v Value) *Object {
 	return o
 }
 
+// 'GetArray' returns the 'Array' in 'v', or nil if 'v' doesn't contain an 'Array'
 func GetArray (v Value) *Array {
 	if v == nil {
 		return nil;
@@ -346,6 +407,7 @@ func GetArray (v Value) *Array {
 	return a
 }
 
+// 'GetString' returns the string in 'v' and true; if 'v' doesn't contain a string, "" and false are returned
 func GetString (v Value) (string, bool) {
 	if v == nil {
 		return "", false
@@ -357,28 +419,32 @@ func GetString (v Value) (string, bool) {
 	return s.S, true
 }
 
+// 'SetString' returns a 'Value' containing 's'
 func SetString (s string) Value {
 	return &String{S: s}
 }
 
+// 'GetInt' returns the int64 in 'v' and true; if 'v' doesn't contain an int64, 0 and false are returned
 func GetInt (v Value) (int64, bool) {
 	if v == nil {
 		return 0, false
 	}
-	i, ok := v.(*Integer)
+	i, ok := v.(*Int)
 	if !ok || i == nil {
 		return 0, false
 	}
 	return i.N, true
 }
 
+// 'SetInt' returns a 'Value' containing 'n'
 func SetInt (n int64) Value {
-	return &Integer{N: n}
+	return &Int{N: n}
 }
 
+// 'GetFloat' returns the float64 in 'v' and true; if 'v' doesn't contain a float64, 0 and false are returned
 func GetFloat (v Value) (float64, bool) {
 	if v == nil {
-		return 0.0, false
+		return 0, false
 	}
 	ff, ok := v.(*Float)
 	if !ok || ff == nil {
@@ -387,25 +453,29 @@ func GetFloat (v Value) (float64, bool) {
 	return ff.F, true
 }
 
+// 'SetFloat' returns a 'Value' containing 'f'
 func SetFloat (f float64) Value {
 	return &Float{F: f}
 }
 
+// 'GetBool' returns the bool in 'v' and true; if 'v' doesn't contain a GetBool, false and false are returned
 func GetBool (v Value) (bool, bool) {
 	if v == nil {
 		return false, false
 	}
-	b, ok := v.(*Bool)
+	b, ok := v.(*Boolean)
 	if !ok || b == nil {
 		return false, false
 	}
-	return b.Bool, true
+	return b.Boolean, true
 }
 
+// 'SetBool' returns a 'Value' containing 'b'
 func SetBool (b bool) Value {
-	return &Bool{Bool: b}
+	return &Boolean{Boolean: b}
 }
 
+// 'GetNull' returns true if 'v' is a 'Null' 'Value'
 func GetNull (v Value) bool {
 	if v == nil {
 		return false
@@ -414,6 +484,7 @@ func GetNull (v Value) bool {
 	return ok
 }
 
+// 'SetNull' returns a 'Null' 'Value'
 func SetNull () Value {
 	return &Null{}
 }
@@ -450,7 +521,7 @@ func (c *compilationer) Pos () int {
 } //Pos
 
 func (c *compilationer) SetPos (pos int) {
-	c.pos = M.Min(pos, c.size)
+	c.pos = min(pos, c.size)
 } //SetPos
 
 func (c *compilationer) Error (pos, line, col int, msg string) {
@@ -612,13 +683,13 @@ func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.O
 		s := o.ObjString()
 		i, err := SC.ParseInt(s, 0, 64)
 		if err == nil {
-			res = &Integer{i}
+			res = &Int{i}
 		} else {
 			f, err := SC.ParseFloat(s, 64); M.Assert(err == nil, 100)
 			res = &Float{f}
 		}
 	case trueC, falseC:
-		res = &Bool{fNum == trueC}
+		res = &Boolean{fNum == trueC}
 	case null:
 		res = &Null{}
 	}
@@ -695,6 +766,7 @@ func writeJson (w io.Writer, j Json, flat bool, indent int) {
 	
 	WriteString := func (s string) {
 		
+		// Code special chars of 's' with backslashed representations
 		JsonFilter := func (s string) string {
 			ss := ""
 			for _, r := range s {
@@ -738,14 +810,14 @@ func writeJson (w io.Writer, j Json, flat bool, indent int) {
 		switch v := v.(type) {
 		case *String:
 			WriteString(v.S)
-		case *Integer:
+		case *Int:
 			fmt.Fprintf(w, "%s", SC.FormatInt(v.N, 10))
 		case *Float:
 			fmt.Fprintf(w, "%s", SC.FormatFloat(v.F, 'g', -1, 64))
 		case *JsonVal:
 			writeJson(w, v.Json, flat, indent)
-		case *Bool:
-			if v.Bool {
+		case *Boolean:
+			if v.Boolean {
 				fmt.Fprintf(w, "%s", "true")
 			} else {
 				fmt.Fprintf(w, "%s", "false")
@@ -812,6 +884,7 @@ func writeJson (w io.Writer, j Json, flat bool, indent int) {
 	}
 } //writeJson
 
+// 'GetString' returns a formatted string representing 'o'
 func (o *Object) GetString () string {
 	M.Assert(o != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -819,6 +892,7 @@ func (o *Object) GetString () string {
 	return buf.String()
 } //GetString
 
+// 'GetString' returns a formatted string representing 'a'
 func (a *Array) GetString () string {
 	M.Assert(a != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -826,6 +900,7 @@ func (a *Array) GetString () string {
 	return buf.String()
 } //GetString
 
+// 'GetFlatString' returns a compact string representing 'o'
 func (o *Object) GetFlatString () string {
 	M.Assert(o != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -833,6 +908,7 @@ func (o *Object) GetFlatString () string {
 	return buf.String()
 } //GetFlatString
 
+// 'GetFlatString' returns a compact string representing 'a'
 func (a *Array) GetFlatString () string {
 	M.Assert(a != nil, 20)
 	var buf = new(bytes.Buffer)
@@ -840,26 +916,27 @@ func (a *Array) GetFlatString () string {
 	return buf.String()
 } //GetFlatString
 
-// 'Write' writes 'o' with 'w'
+// 'Write' writes a formatted string representing 'o' with 'w'
 func (o *Object) Write (w io.Writer) {
 	writeJson(w, o, false, 0)
 } //Write
 
-// 'Write' writes 'a' with 'w'
+// 'Write' writes a formatted string representing 'a' with 'w'
 func (a *Array) Write (w io.Writer) {
 	writeJson(w, a, false, 0)
 } //Write
 
-// 'WriteFlat' writes 'o' with 'w'
+// 'WriteFlat' writes a compact string representing 'o' with 'w'
 func (o *Object) WriteFlat (w io.Writer) {
 	writeJson(w, o, true, 0)
 } //WriteFlat
 
-// 'WriteFlat' writes 'a' with 'w'
+// 'WriteFlat' writes a compact string representing 'a' with 'w'
 func (a *Array) WriteFlat (w io.Writer) {
 	writeJson(w, a, true, 0)
 } //WriteFlat
 
+// Replace backslashed representations of special characters in 's' by these characters themselves
 func DecodeString (s string) string {
 	
 	const (
@@ -962,7 +1039,7 @@ func (m *Maker) PushString (s string) {
 
 // 'PushInteger' pushes the integer 'n' on the stack
 func (m *Maker) PushInteger (n int64) {
-	m.push(&stValue{val: &Integer{n}})
+	m.push(&stValue{val: &Int{n}})
 }
 
 // 'PushReal' pushes the float 'f' on the stack
@@ -972,7 +1049,7 @@ func (m *Maker) PushFloat (f float64) {
 
 // 'PushBoolean' pushes the boolean 'b' on the stack
 func (m *Maker) PushBoolean (b bool) {
-	m.push(&stValue{val: &Bool{b}})
+	m.push(&stValue{val: &Boolean{b}})
 }
 
 // 'PushNull' pushes a json null value on the stack
@@ -1002,7 +1079,7 @@ func (m *Maker) BuildField (name string) {
 	m.push(&stField{name: name, value: s.val})
 }
 
-// 'BuildObject' builds a json object from all the fields stacked from the last 'StartObject' call and stacks it
+// 'BuildObject' builds a json 'Object' from all the fields stacked after the last 'StartObject' call, remove these fields and stacks the 'Object'
 func (m *Maker) BuildObject () {
 	s := m.stk
 	n := 0
@@ -1034,7 +1111,7 @@ func (m *Maker) BuildObject () {
 	m.push(&stValue{val: &JsonVal{o}})
 }
 
-// 'BuildArray' builds a json array from all the values stacked from the last 'StartArray' call and stacks it
+// 'BuildArray' builds a json 'Array' from all the values stacked from the last 'StartArray' call, remove these values and stacks the 'Array'
 func (m *Maker) BuildArray () {
 	s := m.stk
 	n := 0
@@ -1116,6 +1193,7 @@ func (m *Maker) GetJson () Json {
 	return jv.Json
 }
 
+// 'NewMaker' creates and returns a 'Maker' able to build 'Json' by stack manipulations
 func NewMaker () *Maker {
 	return &Maker{stk: (*stack)(nil)}
 }
@@ -1176,7 +1254,7 @@ func process (v R.Value, m *Maker) {
 	}
 } //process
 
-// BuildJsonFrom builds and returns a Json describing obj; warning: obj must be nil or a pointer to a global exported struct variable of its package, and only its exported fields are taken into account
+// BuildJsonFrom builds and returns a 'Json' describing 'obj'; warning: 'obj' must be nil or a pointer to a global exported struct variable of its package, and only its exported fields are taken into account
 func BuildJsonFrom (obj interface{}) Json {
 	if obj == nil {
 		return nil
@@ -1187,6 +1265,133 @@ func BuildJsonFrom (obj interface{}) Json {
 	return m.GetJson()
 } //BuildJsonFrom
 
+// 'path' is a concatenation of '.' denoting an 'Object', identifiers (letters and digits) denoting 'Fields' of 'Object'(s) and of '[<number>] denoting an element of an 'Array'; 'Find(j, path)' returns a '*ValueStruct' containing the value pointed by 'path' in 'j' and a possible error (see examples in json_test.go); the first value of 'expectedKinds', if present, tells which kind of value is expected, the second one tells, in the case of a json value, if an object or an array is expected, if these conditions are present and not respected an error is triggered
+func Find (j Json, path string, expectedKinds ... int) (*ValueStruct, error) {
+	
+	ld := func (r rune) bool {
+		return unicode.IsLetter(r) || unicode.IsDigit(r)
+	}
+	
+	valueOf := func (v Value) *ValueStruct {
+		vs := new(ValueStruct)
+		vs.Kind = v.VKind()
+		switch vv := v.(type) {
+		case *JsonVal:
+			vs.Json = vv.Json
+		case *String:
+			vs.String = vv.S
+		case *Int:
+			vs.Int = vv.N
+		case *Float:
+			vs.Float = vv.F
+		case *Boolean:
+			vs.Boolean = vv.Boolean
+		case *Null:
+		}
+		return vs
+	}
+	
+	pos := 0
+	if path[0] != '.' && path[0] != '[' {
+		path = "." + path
+		pos = -1
+	}
+	p := []rune(path)
+	l := len(p)
+	vs := new(ValueStruct)
+	for l != 0 {
+		var (v Value; ok bool; n int)
+		switch p[0] {
+		case '.':
+			if j.JKind() != ObjectKind {
+				return nil, errors.New("No object at " + strconv.Itoa(pos))
+			}
+			o := j.GetObject()
+			n = 1
+			pos++
+			for n < l && ld(p[n]) {
+				n++
+			}
+			if n == 1 {
+				return nil, errors.New("No field at " + strconv.Itoa(pos))
+			}
+			id := string(p[1:n])
+			v, ok = GetValue(o, id)
+			if !ok {
+				return nil, errors.New("No field at " + strconv.Itoa(pos))
+			}
+		case '[':
+			if j.JKind() != ArrayKind {
+				return nil, errors.New("No array at " + strconv.Itoa(pos))
+			}
+			a := j.GetArray()
+			n = 1
+			pos++
+			for n < l && unicode.IsDigit(p[n]) {
+				n++
+			}
+			if n == l || p[n] != ']' {
+				return nil, errors.New("No ']' detected at " + strconv.Itoa(pos + n - 1))
+			}
+			if n == 1 {
+				return nil, errors.New("No element at " + strconv.Itoa(pos))
+			}
+			nb, err := strconv.Atoi(string(p[1:n]))
+			if err != nil {
+				return nil, errors.New("Not a number at " + strconv.Itoa(pos))
+			}
+			if nb >= len(a.Elements) {
+				return nil, errors.New("Out of range at " + strconv.Itoa(pos))
+			}
+			n++
+			v = a.Elements[nb]
+		default:
+			return nil, errors.New("Unexpected character at " + strconv.Itoa(pos))
+		}
+		p = p[n:]
+		l = len(p)
+		vs = valueOf(v)
+		if vs.Kind == JsonKind {
+			j = vs.Json
+		} else {
+			if l != 0 {
+				return nil, errors.New("Not a JSON at " + strconv.Itoa(pos))
+			}
+		}
+		pos += n - 1
+	}
+	if expectedKinds != nil && vs.Kind != expectedKinds[0] {
+		var kind string 
+		switch vs.Kind {
+		case JsonKind:
+			kind = "Json"
+		case StringKind:
+			kind = "String"
+		case IntKind:
+			kind = "Int"
+		case FloatKind:
+			kind = "Float"
+		case BooleanKind:
+			kind = "Boolean"
+		case NullKind:
+			kind = "Null"
+		}
+		return nil, errors.New(kind + " kind was not expected")
+	}
+	if expectedKinds != nil && len(expectedKinds) > 1 && vs.Kind == JsonKind && vs.Json.JKind() != expectedKinds[1] {
+		var jKind string
+		switch vs.Json.JKind() {
+		case ObjectKind:
+			jKind = "Object"
+		case ArrayKind:
+			jKind = "Array"
+		}
+		return nil, errors.New(jKind + " kind was not expected")
+	}
+	return vs, nil
+}
+
+// Fix the current Json compiler from its Babel representation
 func SetRComp (rComp io.Reader) {
 	comp = C.NewDirectory(&directory{r: bufio.NewReader(rComp)}).ReadCompiler()
 }

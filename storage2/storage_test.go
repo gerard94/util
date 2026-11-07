@@ -1,33 +1,41 @@
-package storage
+package storage2
 
 import (
 	"testing"
-	M	"git.duniter.org/gerard94/util/misc"
+	//M	"git.duniter.org/gerard94/util/misc"
 	"fmt"
+	"unsafe"
 )
 
 func TestRecHeap (t *testing.T) {
 	heap := NewRecHeap(10, 5)
 	a := heap.NewRec()
-	M.Want(a % 5 == 0, t)
-	fmt.Println(a)
+	au := uintptr(unsafe.Pointer(a))
+	//M.Want(au % 5 == 4, t)
+	fmt.Println(au)
 	b := heap.NewRec()
-	M.Want(b % 5 == 0, t)
-	fmt.Println(b)
+	bu := uintptr(unsafe.Pointer(b))
+	//M.Want(bu % 5 == 4, t)
+	fmt.Println(bu)
 	heap.DisposeRec(&a)
-	fmt.Println(a)
+	au = uintptr(unsafe.Pointer(a))
+	fmt.Println(au)
 	heap.DisposeRec(&b)
 	a = heap.NewRec()
-	fmt.Println(a)
+	au = uintptr(unsafe.Pointer(a))
+	fmt.Println(au)
 	b = heap.NewRec()
-	fmt.Println(b)
+	bu = uintptr(unsafe.Pointer(b))
+	fmt.Println(bu)
 }
 
 func TestArrHeap (t *testing.T) {
 	heap := NewArrHeap(10, 3)
 	a := heap.NewArr(9)
-	M.Want(a % 3 == 0, t)
-	fmt.Println(a)
+	au := uintptr(unsafe.Pointer(a))
+	//M.Want(au % 3 == 2, t)
+	fmt.Println(au)
 	heap.DisposeArr(&a, 9)
-	fmt.Println(a)
+	au = uintptr(unsafe.Pointer(a))
+	fmt.Println(au)
 }

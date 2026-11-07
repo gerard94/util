@@ -12,7 +12,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 package api
 
-// The module BabelInit is part of the Babel subsystem, a compiler compiler. BabelInit loads a hard coded version of the tbl file corresponding to the definition document BabelSrc.odc.
+// The module BabelInit is part of the Babel subsystem, a compiler compiler. BabelInit loads a hard coded version of the tbl file corresponding to the definition document babel.txt.
 
 import (
 	

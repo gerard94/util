@@ -45,7 +45,7 @@ const
 
 type (
 	
-	// Values in elements of trees must verify the interface 'Copier'; for a value 'val', 'val.Copy ()' must return a copy of 'val'.
+	// Values in elements of trees must verify the interface 'Copier' if these trees should be deeply copied; for a value 'val', 'val.Copy ()' must return a copy of 'val'.
 	Copier [T any] interface {
 		// Copy a value.
 		Copy () T
@@ -57,6 +57,7 @@ type (
 		Compare (T) Comp
 	}
 	
+	// Values in elements of trees must verify the interface 'CompCopier' if these trees should be sorted (see 'Comparer') and deeply copied (see "Copier').
 	CompCopier [T any] interface {
 		Comparer[T]
 		Copier[T]
@@ -76,6 +77,21 @@ type (
 	Tree [T any] struct {
 		root *Elem[T]
 	}
+	
+	// A deeply copyable tree
+	TreeC [T Copier[T]] struct {
+		*Tree[T]
+	}
+	
+	// A sorted tree
+	TreeS [T Comparer[T]] struct {
+		*Tree[T]
+	}
+	
+	// A sorted and deeply copyable tree
+	TreeSC [T CompCopier[T]] struct {
+		*Tree[T]
+	}
 
 )
 
@@ -88,19 +104,39 @@ func (t *Tree[T]) IsEmpty () bool {
 
 // 'Empty' empties 't'
 func (t *Tree[T]) Empty () {
-	M.Assert(t != nil, "Nil Tree", 20)
 	e := Elem[T]{lTag: false, rTag: true}
 	e.left = &e
 	e.right = &e
 	t.root = &e
 } //Empty
 
-// New creates a new tree.
+// 'New' creates a new tree.
 func New [T any] () *Tree[T] {
 	t := &Tree[T]{}
 	t.Empty()
 	return t
 } //New
+
+// 'NewC' creates a new deeply copyable tree.
+func NewC [T Copier[T]] () *TreeC[T] {
+	t := &TreeC[T]{Tree: New[T]()}
+	t.Empty()
+	return t
+} //NewC
+
+// 'NewS' creates a new sorted tree.
+func NewS [T Comparer[T]] () *TreeS[T] {
+	t := &TreeS[T]{Tree: New[T]()}
+	t.Empty()
+	return t
+} //NewS
+
+// 'NewSC' creates a new sorted and deeply copyable tree.
+func NewSC [T CompCopier[T]] () *TreeSC[T] {
+	t := &TreeSC[T]{Tree: New[T]()}
+	t.Empty()
+	return t
+} //NewOC
 
 func newElem [T any] (data T) *Elem[T] {
 	return &Elem[T]{val: data}
@@ -118,14 +154,14 @@ func (e *Elem[T]) SetVal (v T) {
 	e.val = v
 } //SetVal
 
-func copy1 [T Copier[T]] (e *Elem[T], t bool) {
+func copy1 [T any] (e *Elem[T], t bool) {
 	if t {
 		f := new(Elem[T])
 		f.lTag = e.lTag
 		f.rTag = e.rTag
 		f.bal = e.bal
 		f.rank = e.rank
-		f.val = e.val.Copy()
+		f.val = e.val
 		e.cop = f
 		copy1(e.left, e.lTag)
 		copy1(e.right, e.rTag)
@@ -141,16 +177,62 @@ func copy2 [T any] (e *Elem[T], t bool) *Elem[T] {
 	return f
 } //copy2
 
-// 'Copy' returns a copy of 't'; values owned by elements of 't' must verify the interface 'Copier'
-func Copy [T Copier[T]] (t *Tree[T]) *Tree[T] {
+func cleanup [T any] (e *Elem[T], t bool) {
+	e.cop = nil
+	if t {
+		cleanup(e.left, e.lTag)
+		cleanup(e.right, e.rTag)
+	}
+} //cleanup
+
+// 'Copy' returns a shallow copy of 't'
+func (t *Tree[T]) Copy () *Tree[T] {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	u := New[T]()
 	t.root.cop = u.root
-	copy1[T](t.root.left, t.root.lTag)
+	copy1(t.root.left, t.root.lTag)
 	u.root.left = copy2(t.root.left, t.root.lTag)
 	u.root.lTag = t.root.lTag
+	cleanup(t.root.left, t.root.lTag)
 	return u
+} //Copy
+
+// 'Copy' returns a shallow copy of 't'
+func (t *TreeS[T]) Copy () *TreeS[T] {
+	return &TreeS[T]{Tree: t.Tree.Copy ()}
+} //Copy
+
+func copyC1 [T Copier[T]] (e *Elem[T], t bool) {
+	if t {
+		f := new(Elem[T])
+		f.lTag = e.lTag
+		f.rTag = e.rTag
+		f.bal = e.bal
+		f.rank = e.rank
+		f.val = e.val.Copy()
+		e.cop = f
+		copyC1(e.left, e.lTag)
+		copyC1(e.right, e.rTag)
+	}
+} //copyC1
+
+// 'Copy' returns a deep copy of 't'
+func (t *TreeC[T]) Copy () *TreeC[T] {
+	M.Assert(t != nil, "Nil Tree", 20)
+	M.Assert(t.root != nil, "Invalid Tree", 21)
+	u := NewC[T]()
+	t.root.cop = u.root
+	copyC1(t.root.left, t.root.lTag)
+	u.root.left = copy2(t.root.left, t.root.lTag)
+	u.root.lTag = t.root.lTag
+	cleanup(t.root.left, t.root.lTag)
+	return u
+} //Copy
+
+// 'Copy' returns a deep copy of 't'
+func (t *TreeSC[T]) Copy () *TreeSC[T] {
+	return (*TreeSC[T])((*TreeC[T])(t).Copy ())
 } //Copy
 
 func balLI [T any] (pp **Elem[T], h *bool) {
@@ -477,7 +559,7 @@ func sIns [T Comparer[T]] (q *Elem[T], l bool, pkey, pp **Elem[T], rank *int, t,
 
 // 'SearchIns' searches the value 'key' in the sorted tree 't'; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, it is inserted into a new element returned in 'res', 'found' is false and 'rank' returns the rank of the new element.
 // The rank of the first element in a tree is 1.
-func SearchIns [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int) {
+func (t *TreeS[T]) SearchIns (key T) (res *Elem[T], found bool, rank int) {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	k := newElem(key)
@@ -488,9 +570,14 @@ func SearchIns [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, ra
 	return
 } //SearchIns
 
+// Same as (*TreeS).SearchIns.
+func (t *TreeSC[T]) SearchIns (key T) (res *Elem[T], found bool, rank int) {
+	return (*TreeS[T])(t).SearchIns(key)
+} //SearchIns
+
 // 'Search' searches the value 'key' in the sorted tree 't'; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, 'res' is nil, 'found' is false and 'rank' is 0.
 // The rank of the first element in a tree is 1.
-func Search [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int) {
+func (t *TreeS[T]) Search (key T) (res *Elem[T], found bool, rank int) {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	tag := t.root.lTag
@@ -525,9 +612,14 @@ func Search [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank 
 	return
 } //Search
 
-// SearchNext searches the value 'key' in the sorted tree 't', or the next value if not found; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, 'found' is false, 'res' returns the element containing the next value and its rank is returned in 'rank'; if 'key' is not found and there is no next value, 'res' is nil and 'rank' is 0.
+// Same as (*TreeS).Search.
+func (t *TreeSC[T]) Search (key T) (res *Elem[T], found bool, rank int) {
+	return (*TreeS[T])(t).Search(key)
+} //Search
+
+// 'SearchNext' searches the value 'key' in the sorted tree 't', or the next value if not found; if 'key' is found, 'found' is true, the element containing this value is returned in 'res' and its rank in the tree in 'rank'; if 'key' is not found, 'found' is false, 'res' returns the element containing the next value and its rank is returned in 'rank'; if 'key' is not found and there is no next value, 'res' is nil and 'rank' is 0.
 // The rank of the first element in a tree is 1.
-func SearchNext [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, rank int) {
+func (t *TreeS[T]) SearchNext (key T) (res *Elem[T], found bool, rank int) {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	var valNext *Elem[T]
@@ -570,6 +662,11 @@ func SearchNext [T Comparer[T]] (t *Tree[T], key T) (res *Elem[T], found bool, r
 			}
 		}
 	}
+} //SearchNext
+
+// Same as (*TreeS).SearchNext.
+func (t *TreeSC[T]) SearchNext (key T) (res *Elem[T], found bool, rank int) {
+	return (*TreeS[T])(t).SearchNext(key)
 } //SearchNext
 
 func fixLThread [T any] (p, q *Elem[T]) {
@@ -647,11 +744,16 @@ func delD [T Comparer[T]] (key T, l bool, pp **Elem[T], t *bool) (h, found bool)
 } //delD
 
 // 'Delete' erases the value 'key', if it exists, in the sorted tree 't'; returns true if 'key' is found, else does nothing.
-func Delete [T Comparer[T]] (t *Tree[T], key T) bool {
+func (t *TreeS[T]) Delete (key T) bool {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	_, found := delD(key, true, &t.root.left, &t.root.lTag)
 	return found
+} //Delete
+
+// Same as (*TreeS).Delete.
+func (t *TreeSC[T]) Delete (key T) bool {
+	return (*TreeS[T])(t).Delete(key)
 } //Delete
 
 func nOE [T any] (p *Elem[T], tag bool) int {
@@ -1071,7 +1173,7 @@ func doSplit [T any] (t1 *Tree[T], after int, p *Elem[T], t bool, t2 *Tree[T]) (
 	return
 } //doSplit
 
-// Splits the tree 't1' after the element of rank 'after'; the result is returned in 't1' and 't2'.
+// 'Split' splitss the tree 't1' after the element of rank 'after'; the result is returned in 't1' and 't2'.
 func (t1 *Tree[T]) Split (after int) (t2 *Tree[T]) {
 	M.Assert(t1 != nil, "Nil Tree", 20)
 	M.Assert(t1.root != nil, "Invalid Tree", 21)

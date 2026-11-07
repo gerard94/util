@@ -9,6 +9,7 @@ import (
 	M	"git.duniter.org/gerard94/util/misc"
 	R	"git.duniter.org/gerard94/util/resources"
 	S	"git.duniter.org/gerard94/util/sets"
+		"math"
 		"strings"
 		
 		/*
@@ -844,7 +845,7 @@ func (ts *typeSystem) fixStreamResolvers () {
 func iDnCoercer (ts G.TypeSystem, value G.Value, path G.Path, cValue *G.Value) bool {
 	switch value := value.(type) {
 	case *G.IntValue:
-		if M.MinInt32 <= value.Int && value.Int <= M.MaxInt32 {
+		if math.MinInt32 <= value.Int && value.Int <= math.MaxInt32 {
 			*cValue = value;
 			return true
 		}

@@ -392,7 +392,7 @@ func TestG3 (tt *testing.T) {
 	//fmt.Println("nb. of suppressed keys = ", M.Abs(i - j))
 	//fmt.Println()
 	ir := ind.NewReader()
-	for m := 0; m < M.Min(i, j); m++ {
+	for m := 0; m < min(i, j); m++ {
 		ir.Next()
 	}
 	for m := 1; m <= M.Abs(i - j); m++ {

@@ -30,6 +30,7 @@ import (
 		"fmt"
 		"io"
 		"io/ioutil"
+		"math"
 		"os"
 		"strings"
 		"sync"
@@ -978,7 +979,7 @@ func (c *compilationer) Pos () int {
 } //Pos
 
 func (c *compilationer) SetPos (pos int) {
-	c.pos = M.Min(pos, c.size)
+	c.pos = min(pos, c.size)
 } //SetPos
 
 func (n1 *NameMapItem) Compare (n2 A.Comparer) A.Comp {
@@ -992,10 +993,6 @@ func (n1 *NameMapItem) Compare (n2 A.Comparer) A.Comp {
 	return A.Eq
 } //Compare
 
-func (n *NameMapItem) Copy () A.Copier {
-	return n
-} //Copy
-
 func (err1 *ErrorElem) Compare (err2 A.Comparer) A.Comp {
 	er2 := err2.(*ErrorElem)
 	if err1.Locations == nil && er2.Locations != nil {
@@ -1005,7 +1002,7 @@ func (err1 *ErrorElem) Compare (err2 A.Comparer) A.Comp {
 		return A.Gt
 	}
 	if err1.Locations != nil && er2.Locations != nil {
-		n := M.Min(len(err1.Locations), len(er2.Locations))
+		n := min(len(err1.Locations), len(er2.Locations))
 		for i := 0; i < n; i++ {
 			l1 := err1.Locations[i]; l2 := er2.Locations[i]
 				if l1.L < l2.L {
@@ -1724,7 +1721,7 @@ func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.O
 				i++
 			}
 			
-			commonIndent := M.MaxInt32
+			commonIndent := math.MaxInt32
 			l = ll.next.next
 			for l != ll {
 				rs := []rune(l.line)
@@ -1737,11 +1734,11 @@ func (c *compilationer) Execution (fNum, parsNb int, pars C.ObjectsList) (o *C.O
 				}
 				l = l.next
 			}
-			if commonIndent != M.MaxInt32 {
+			if commonIndent != math.MaxInt32 {
 				l = ll.next.next
 				for l != ll {
 					r := []rune(l.line)
-					l.line = string(r[M.Min(commonIndent, len(r)):])
+					l.line = string(r[min(commonIndent, len(r)):])
 					l = l.next
 				}
 			}
@@ -5562,7 +5559,7 @@ func (es *execSystem) executeRequest (operationName *StrPtr, variableValues *A.T
 func intCoercer (ts TypeSystem, v Value, path Path, cV *Value) bool {
 	switch v := v.(type) {
 	case *IntValue:
-		if M.MinInt32 <= v.Int && v.Int <= M.MaxInt32 {
+		if math.MinInt32 <= v.Int && v.Int <= math.MaxInt32 {
 			*cV = v
 			return true
 		}
@@ -6724,9 +6721,9 @@ func (es *execSystem) Execute (doc *Document, operationName string, variableValu
 func TransVal (value J.Value) Value {
 	var v Value
 	switch value := value.(type) {
-	case *J.Bool:
-		v = &BooleanValue{value.Bool}
-	case *J.Integer:
+	case *J.Boolean:
+		v = &BooleanValue{value.Boolean}
+	case *J.Int:
 		v = &IntValue{value.N}
 	case *J.Null:
 		v = new(NullValue)

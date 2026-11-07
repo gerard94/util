@@ -23,10 +23,6 @@ func (i comp) Compare (j Comparer) Comp {
 	}
 }
 
-func (i comp) Copy () Copier {
-	return i
-}
-
 var treeCreate func () (*Tree, []comp, int)
 
 func treeCreate1 () (*Tree, []comp, int) {
@@ -210,7 +206,7 @@ func doPrint (i interface{}, l ...interface{}) {
 	fmt.Println(i.(comp))
 }
 
-func ExampleWalkThrough1_2() {
+func ExampleTree_WalkThrough() {
 	tree, _, _  := treeCreate1()
 	tree.WalkThrough(doPrint)
 	// Output:
@@ -245,7 +241,7 @@ func doStruct(e *Elem, t bool) {
 	}
 }
 
-func ExampleWalkThrough() {
+func ExampleTree_WalkThrough_doStruct() {
 	tree, _, _ := treeCreate1()
 	doStruct(tree.root.left, tree.root.lTag)
 	// Output:

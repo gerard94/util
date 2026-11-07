@@ -19,6 +19,7 @@ import (
 	Avl	"git.duniter.org/gerard94/util/avl"
 	M	"git.duniter.org/gerard94/util/misc"
 		"bytes"
+		"math"
 
 )
 
@@ -182,8 +183,8 @@ func (s *stdString) Insert (pos int, src String) String {
 
 func (s *stdString) Extract (pos, length int) String {
 	t := s.chars.Copy()
-	length = M.Max(0, length)
-	if pos <= M.MaxInt32 - length {
+	length = max(0, length)
+	if pos <= math.MaxInt32 - length {
 		t.Split(pos + length)
 	}
 	u := t.Split(pos)
@@ -215,7 +216,7 @@ func (r *stdReader) Base () String {
 } //Base
 
 func (r *stdReader) Pos () int {
-	r.p = M.Min(r.p, r.s.Length())
+	r.p = min(r.p, r.s.Length())
 	return r.p
 } //Pos
 
@@ -227,7 +228,7 @@ func (r *stdReader) SetPos (pos int) {
 
 func (r *stdReader) Read () {
 	l := r.s.Length()
-	r.p = M.Min(r.p, l)
+	r.p = min(r.p, l)
 	r.eos = r.p == l
 	if r.eos {
 		r.char = eOS
@@ -247,7 +248,7 @@ func (r *stdReader) ReadString (length int) string {
 	buf := new(bytes.Buffer)
 	if length > 0 {
 		l := r.s.Length()
-		r.p = M.Min(r.p, l)
+		r.p = min(r.p, l)
 		e, ok := r.s.chars.Find(r.p + 1)
 		if !ok {
 			e = nil
@@ -273,7 +274,7 @@ func (w *stdWriter) Base () String {
 } //Base
 
 func (w *stdWriter) Pos () int {
-	w.p = M.Min(w.p, w.s.Length())
+	w.p = min(w.p, w.s.Length())
 	return w.p
 } //Pos
 
@@ -285,7 +286,7 @@ func (w *stdWriter) SetPos (pos int) {
 
 func (w *stdWriter) WriteChar (c rune) {
 	l := w.s.Length()
-	w.p = M.Min(M.Max(0, w.p), l)
+	w.p = min(max(0, w.p), l)
 	if w.p == l {
 		w.s.chars.Append(char(c))
 	} else {

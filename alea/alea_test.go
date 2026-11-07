@@ -10,7 +10,7 @@ var
 	
 	gT *Generator = New()
 
-func TestRandom (t *testing.T) {
+func TestGenerator_Random (_ *testing.T) {
 	const n = 100
 	for i := 0; i < n; i++ {
 		fmt.Println(gT.Random())
@@ -18,7 +18,7 @@ func TestRandom (t *testing.T) {
 	fmt.Println()
 }
 
-func TestIntRand (t *testing.T) {
+func TestGenerator_IntRand (t *testing.T) {
 	const (n = 100; min = 1000; max = 10000)
 	for i := 0; i < n; i++ {
 		fmt.Println(gT.IntRand(min, max))
@@ -26,7 +26,7 @@ func TestIntRand (t *testing.T) {
 	fmt.Println()
 }
 
-func TestGauss (t *testing.T) {
+func TestGenerator_GaussRand (t *testing.T) {
 	
 	const (
 		n = 10000000
@@ -49,8 +49,8 @@ func TestGauss (t *testing.T) {
 	}
 	s = s / n
 	s2 = math.Sqrt(s2 / n - s * s)
-	fmt.Println("Mean: ", s)
-	fmt.Println("Standard deviation: ", s2)
-	fmt.Println("prop. at sigma: ", 100. * float64(p) / n)
+	fmt.Printf("Mean: %v (%v)\n", s, m)
+	fmt.Printf("Standard deviation: %v (%v)\n", s2, sig)
+	fmt.Printf("prop. at sigma: %v%% (~68.27%%)\n", 100. * float64(p) / n)
 	fmt.Println()
 }

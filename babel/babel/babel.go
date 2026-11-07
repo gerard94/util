@@ -94,7 +94,7 @@ func (f *Facer) Pos () int {
 } // Pos
 
 func (f *Facer) SetPos (pos int) {
-	f.pos = M.Min(pos, f.size)
+	f.pos = min(pos, f.size)
 } // SetPos
 
 func (f *Facer) Map (index string, p ... string) string {

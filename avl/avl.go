@@ -45,16 +45,16 @@ const
 
 type (
 	
+	// Values in elements of trees must verify the interface 'Copier' if these trees should be deeply copied; in this case, for a value 'val', 'val.Copy ()' must return a copy of 'val'; this condition may be omitted for shallow copies.
+	Copier interface {
+		// Copy a value.s
+		Copy () Copier
+	}
+	
 	// Values in elements of trees must verify the interface 'Comparer' if these trees implement the methods 'SearchIns', 'Search', 'SearchNext' or 'Delete'; in this case, if the methods 'Insert', 'Prepend', 'Append' and 'Cat' are not used, trees remain sorted.
 	Comparer interface {
 		// Compare two values; the comparison must be reflexive, transitive, antisymmetric and total.
 		Compare(Comparer) Comp
-	}
-	
-	// Values in elements of trees must verify the interface 'Copier' if these trees should be copied; for a value 'val', 'val.Copy ()' must return a copy of 'val'.
-	Copier interface {
-		// Copy a value.
-		Copy () Copier
 	}
 	
 	// Element of a tree.
@@ -120,12 +120,26 @@ func copy1 (e *Elem, t bool) {
 		f.rTag = e.rTag
 		f.bal = e.bal
 		f.rank = e.rank
-		f.val = e.val.(Copier).Copy()
+		f.val = e.val
 		e.cop = f
 		copy1(e.left, e.lTag)
 		copy1(e.right, e.rTag)
 	}
 } //copy1
+
+func copyC1 (e *Elem, t bool) {
+	if t {
+		f := new(Elem)
+		f.lTag = e.lTag
+		f.rTag = e.rTag
+		f.bal = e.bal
+		f.rank = e.rank
+		f.val = e.val.(Copier).Copy()
+		e.cop = f
+		copyC1(e.left, e.lTag)
+		copyC1(e.right, e.rTag)
+	}
+} //copyC1
 
 func copy2 (e *Elem, t bool) *Elem {
 	f := e.cop
@@ -136,15 +150,33 @@ func copy2 (e *Elem, t bool) *Elem {
 	return f
 } //copy2
 
-// 'Copy' returns a copy of 't'; values owned by elements of 't' must verify the interface 'Copier'
+func cleanup (e *Elem, t bool) {
+	e.cop = nil
+	if t {
+		cleanup(e.left, e.lTag)
+		cleanup(e.right, e.rTag)
+	}
+} //cleanup
+
+// 'Copy' returns a copy of 't'; if values owned by elements of 't' verify the interface 'Copier', the copy is deep, otherwise it's shallow
 func (t *Tree) Copy () *Tree {
 	M.Assert(t != nil, "Nil Tree", 20)
 	M.Assert(t.root != nil, "Invalid Tree", 21)
 	u := New()
+	e := t.root.left
+	if e == t.root {
+		return u
+	}
+	_, deep := e.val.(Copier)
 	t.root.cop = u.root
-	copy1(t.root.left, t.root.lTag)
+	if deep {
+		copyC1(t.root.left, t.root.lTag)
+	} else {
+		copy1(t.root.left, t.root.lTag)
+	}
 	u.root.left = copy2(t.root.left, t.root.lTag)
 	u.root.lTag = t.root.lTag
+	cleanup(t.root.left, t.root.lTag)
 	return u
 } //Copy
 

@@ -2,8 +2,6 @@ package strings
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-	
 	"bytes"
 	"strings"
 	"unicode"
@@ -32,7 +30,7 @@ func ToDown (s string) string {
 	buf := new(bytes.Buffer)
 	for _, r := range rs {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			buf.WriteRune(M.Min32(unicode.ToUpper(r), unicode.ToLower(r)))
+			buf.WriteRune(min(unicode.ToUpper(r), unicode.ToLower(r)))
 		}
 	}
 	return string(buf.Bytes())
@@ -75,7 +73,7 @@ func compS (s1, s2 string) Comp {
 	rs2 := bytes.Runes([]byte(s2))
 	l1 := len(rs1)
 	l2 := len(rs2)
-	l := M.Min(l1, l2)
+	l := min(l1, l2)
 	for i := 0; i < l; i++ {
 		switch compR(rs1[i], rs2[i]) {
 		case Lt:

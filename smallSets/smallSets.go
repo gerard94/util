@@ -3,6 +3,7 @@ package smallSets
 import (
 	
 	M	"git.duniter.org/gerard94/util/misc"
+		"math"
 
 )
 
@@ -24,7 +25,7 @@ func NewSet () Set {
 }
 
 func Full () Set {
-	return Set(M.MaxUint64)
+	return Set(math.MaxUint64)
 }
 
 func MakeSet (values ... int) Set {

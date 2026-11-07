@@ -11,7 +11,7 @@ import (
 func TestQueueLim (t *testing.T) {
 	fmt.Println("TestQueueLim")
 	var q QueueLim[int]
-	q.Init(5)
+	(&q).Init(5)
 	q.Push(9)
 	q.Push(8)
 	q.Push(7)

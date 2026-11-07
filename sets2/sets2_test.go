@@ -41,6 +41,7 @@ func TestCreate (t *testing.T) {
 		max  = 10
 		prop = 0.9
 	)
+	fmt.Println("TestCreate")
 	printSet(createSet(max, prop, true))
 }
 
@@ -50,12 +51,16 @@ func TestXorUnionInterDiffWithAdd1 (t *testing.T) {
 		max  = 9
 		prop = 0.9
 	)
+	fmt.Println("TestXorUnionInterDiffWithAdd1")
 	for k := 1; k <= repeat; k++ {
 		e1 := createSet(max, prop, false)
+		fmt.Println("e1:")
 		printSet(e1)
 		e2 := createSet(max, prop, false)
+		fmt.Println("e2:")
 		printSet(e2)
 		g := e1.XOR(e2)
+		fmt.Println("e1 XOR e2:")
 		printSet(g)
 		f := e1.Inter(e2)
 		e1.Add(e2)
@@ -73,6 +78,7 @@ func TestXorUnionInterDiffWithAdd2 (t *testing.T) {
 		max  = 10000
 		prop = 0.9
 	)
+	fmt.Println("TestXorUnionInterDiffWithAdd2")
 	for k := 1; k <= repeat; k++ {
 		e1 := createSet(max, prop, false)
 		e2 := createSet(max, prop, false)

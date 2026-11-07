@@ -92,7 +92,7 @@ func (c *compilation) Pos () int {
 }
 
 func (c *compilation) SetPos (pos int) {
-	c.pos = M.Min(pos, c.size)
+	c.pos = min(pos, c.size)
 }
 
 func (c *compilation) Execution (fNum, parsNb int, pars B.ObjectsList) (objPos *B.Object, res B.Anyptr, ok bool) {
@@ -127,14 +127,20 @@ func (c *compilation) Map (index string, p ...string) (val string) {
 func setGram (name string) *B.Compiler {
 	name = R.FindDir(name)
 	f, err := os.Open(name)
-	M.Assert(err == nil, err, 100)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
 	d := B.NewDirectory(&directory{r: bufio.NewReader(f)})
 	return d.ReadCompiler()
 }
 
 func setReader (name string) ([]rune) {
 	f, err := os.Open(name)
-	M.Assert(err == nil, err, 100)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
 	fi, err := f.Stat()
 	M.Assert(err == nil, err, 101)
 	b := make([]byte, fi.Size())
@@ -150,6 +156,9 @@ func main () {
 	}
 	comp := setGram(os.Args[1])
 	r := setReader(os.Args[2])
+	if comp == nil || r == nil {
+		return
+	}
 	c := &compilation{r: r, size: len(r), pos: 0, err: A.New()}
 	co := B.NewCompilation(c)
 	c.c = co

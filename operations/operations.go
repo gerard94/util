@@ -60,7 +60,7 @@ func luDcmp (a [][]float64) (indx []int) {
 	for i := 0; i < n; i++ {
 		aamax := 0.
 		for j := 0; j < n; j++ {
-			aamax = M.MaxF64(aamax, M.AbsF64(a[i][j]))
+			aamax = max(aamax, M.AbsF64(a[i][j]))
 		}
 		M.Assert(aamax > 0., 21)
 		vv[i] = 1. / aamax
@@ -169,7 +169,7 @@ func savGol (nl, nr, ld, m int) (c []float64) {
 		for k := 1; k <= nl; k++ {
 			sum += intPower(-k, ipj)
 		}
-		mm := M.Min(ipj, 2 * m - ipj)
+		mm := min(ipj, 2 * m - ipj)
 		for imj := -mm; imj <= mm; imj += 2 {
 			a[(ipj + imj) / 2][(ipj - imj) / 2] = sum
 		}
@@ -232,9 +232,9 @@ func Derive (p Dots, ptsNb, degree int) (dp Dots) {
 		dp[0].y = (p[1].y - p[0].y) / (p[1].x - p[0].x)
 		dp[1].y = dp[0].y
 	} else {
-		q := (M.Min(n, ptsNb) - 1) / 2
+		q := (min(n, ptsNb) - 1) / 2
 		np := 2 * q + 1
-		m := M.Min(np - 1, degree)
+		m := min(np - 1, degree)
 		M.Assert(m >= 1, 100)
 		for i := 0; i < q; i++ {
 			c := savGol(i, np - 1 - i, 1, m)

@@ -70,7 +70,7 @@ NoSubselOfObjInterOrUnion	Missing subselection of ^0 (OBJECT, INTERFACE or UNION
 NotABoolean	Not a Boolean
 NotAFloat	Not a Float
 NotAnID	Not an ID
-NotAnInteger	Not an Integer
+NotAnInteger	Not an Int
 NotAString	Not a String
 NotDefinedInScope	^0 is not defined in scope
 NotDefinedOp	The operation to be executed is not defined

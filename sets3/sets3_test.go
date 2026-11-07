@@ -36,10 +36,8 @@ func createSet (nb int, print bool) *Set {
 
 func printSet (s *Set) {
 	i := s.Attach()
-	e, ok := i.FirstE()
-	for ok {
+	for e, ok := i.FirstE(); ok; e, ok = i.NextE() {
 		fmt.Println(e)
-		e, ok = i.NextE()
 	}
 	fmt.Println()
 }
@@ -51,6 +49,7 @@ func TestCreate (t *testing.T) {
 	
 	)
 	
+	fmt.Println("TestCreate")
 	printSet(createSet(nb, true))
 }
 
@@ -61,16 +60,20 @@ func TestXorUnionInterDiffWithAdd (t *testing.T) {
 		nb  = 8
 	
 	)
+	fmt.Println("TestXorUnionInterDiffWithAdd")
 	for k := 1; k <= repeat; k++ {
 		e1 := createSet(nb, false)
+		fmt.Println("e1:")
 		printSet(e1)
 		e2 := createSet(nb, false)
+		fmt.Println("e2:")
 		printSet(e2)
 		g := e1.XOR(e2)
+		fmt.Println("e1 XOR e2:")
 		printSet(g)
 		f := e1.Inter(e2)
-		e1.Add(e2)
-		f = e1.Diff(f)
+		h := e1.Union(e2)
+		f = h.Diff(f)
 		if !f.Equal(g) {
 			t.Fail()
 		}

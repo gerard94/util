@@ -10,9 +10,11 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-package storage
-
-/* This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed. */
+/*
+This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed.
+Use of generic types. The allocated size is greater than the useful size (alloc = payload + pointer).
+*/
+package storage3
 
 import (
 	M	"git.duniter.org/gerard94/util/misc"
@@ -30,28 +32,28 @@ const (
 
 type (
 	
-	ObjectElem [T any] struct {
+	objectElem [T any] struct {
 		object T
-		next *ObjectElem[T]
+		next *objectElem[T]
 	}
 	
-	Objects [T any] []ObjectElem[T]
+	objects [T any] []objectElem[T]
 	
-	// A heap block, allocated on Blackbox heap when needed
+	// A heap block, allocated on system heap when needed
 	heapBlock [T any] struct {
 		next *heapBlock[T] // Blocks are linked together, so that they can't be collected
-		h Objects[T] // Allocations happen here
+		h objects[T] // Allocations happen here
 	}
 	
 	// Heap for cells of the same size
 	RecHeap [T any] struct {
-		head *ObjectElem[T] // First available cell in this heap
+		head *objectElem[T] // First available cell in this heap
 		h *heapBlock[T] // Linked chain of blocks of this heap
 	}
 	
 	// Head of the chained blocks for one size of array cells
 	blockElem [T any] struct {
-		head *ObjectElem[T] // First available cell in this heap
+		head *objectElem[T] // First available cell in this heap
 		h *heapBlock[T] // Linked chain of blocks of this heap
 	}
 	
@@ -64,12 +66,12 @@ type (
 )
 
 // Creates a new block and stores into it as many free cells as possible in a linked chain
-func newBlock [T any] (h **heapBlock[T]) *ObjectElem[T] {
+func newBlock [T any] (h **heapBlock[T]) *objectElem[T] {
 	b := new(heapBlock[T]); M.Assert(b != nil, 100)
 	b.next = *h // Protection against garbage collector
 	*h = b
-	b.h = make(Objects[T], blockSize); M.Assert(b.h != nil, 101)
-	q := (*ObjectElem[T])(nil)
+	b.h = make(objects[T], blockSize); M.Assert(b.h != nil, 101)
+	q := (*objectElem[T])(nil)
 	for i := 0; i < len(b.h); i++ { // range doesn't work!!!
 		p := &b.h[i]
 		p.next = q
@@ -78,7 +80,7 @@ func newBlock [T any] (h **heapBlock[T]) *ObjectElem[T] {
 	return q
 }
 
-// Allocates into a a new cell of fixed size
+// Allocates into 'a' a new cell of fixed size
 func (heap *RecHeap[T]) NewRec () *T {
 	if heap.head == nil { // No more free cell: allocate a new block
 		heap.head = newBlock[T](&heap.h)
@@ -88,15 +90,15 @@ func (heap *RecHeap[T]) NewRec () *T {
 	return &a.object
 }
 
-// Deallocates the cell at Address a by putting it into the link chained
+// Deallocates the cell at Address 'a' by putting it into the link chained
 func (heap *RecHeap[T]) DisposeRec (a **T) {
-	p := (*ObjectElem[T])(unsafe.Pointer(*a))
+	p := (*objectElem[T])(unsafe.Pointer(*a))
 	p.next = heap.head // Insert new free cell at the beginning of the linked chain
 	heap.head = p
 	*a = nil
 }
 
-// Allocates into a a new cell for an array of elemNb elements of fixed size
+// Allocates into 'a' a new cell for an array of elemNb elements of fixed size
 func (heap *ArrHeap[T]) NewArr (cellNb int) (a *[]T) {
 
 	newA := func (el *blockElem[[]T], nb int) {
@@ -133,12 +135,12 @@ func (heap *ArrHeap[T]) NewArr (cellNb int) (a *[]T) {
 	return
 }
 
-// Deallocates the cell at Address a and containing an array cell of elemNb elements by putting it in the link chained
+// Deallocates the cell at Address 'a' by putting it in the link chained
 func (heap *ArrHeap[T]) DisposeArr (a **[]T) {
 	M.Assert(a != nil && *a != nil && **a != nil, 20)
 	cellNb := len(**a)
 	M.Assert(cellNb > 0, 21)
-	p := (*ObjectElem[[]T])(unsafe.Pointer(*a))
+	p := (*objectElem[[]T])(unsafe.Pointer(*a))
 	p.next = heap.h[cellNb - 1].head
 	heap.h[cellNb - 1].head = p
 	*a = nil
@@ -197,6 +199,6 @@ func (heap *ArrHeap[T]) Stats () (nb, nbElems, size int) {
 }
 
 func init () {
-	a := new(ObjectElem[int])
+	a := new(objectElem[int])
 	M.Assert(uintptr(unsafe.Pointer(a)) == uintptr(unsafe.Pointer(&a.object)), 100)
 }

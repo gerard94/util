@@ -11,11 +11,10 @@ You should have received a copy of the GNU General Public License along with thi
 */
 
 //#include <stdlib.h>
-package storage
+/* This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed. */
+package storage1
 
 // unsafe.Pointer(s) may be moved by the garbage collector, but not uintptr(s).
-
-/* This module implements a fast heap manager. Objects of different sizes have their instances allocated in different heaps. Free space is held in simply linked chains, one for each object size, so that allocation and deallocation are very fast. Heaps can increase, but never decrease. They can be erased when no more needed. */
 
 import (
 	M	"git.duniter.org/gerard94/util/misc"
@@ -39,7 +38,7 @@ type (
 	
 	bytes = [maxLength]byte
 	
-	// A heap block, allocated on Blackbox heap when needed
+	// A heap block, allocated on system heap when needed
 	heapBlock struct {
 		next *heapBlock // Blocks are linked together, so that they can't be collected
 		nbEl int
@@ -125,7 +124,7 @@ func (heap *RecHeap) DisposeRec (a *Address) {
 
 // Initialize a blockElem
 func initBlockElem (el *blockElem, elemSize uintptr, elemNb int) {
-	el.arrSize = M.MaxUP(uintptr(elemNb) * elemSize, addressSize)
+	el.arrSize = max(uintptr(elemNb) * elemSize, addressSize)
 	el.head = nilA // No free cell yet
 }
 
@@ -178,7 +177,7 @@ func NewRecHeap (recSize, align uintptr) (heap *RecHeap) {
 	M.Assert(recSize <= heapSize, 21)
 	M.Assert(align > 0, 22)
 	heap = new(RecHeap); M.Assert(heap != nil, 100)
-	recSize = M.MaxUP(recSize, addressSize) // Must keep room for free cells and their integer links
+	recSize = max(recSize, addressSize) // Must keep room for free cells and their integer links
 	heap.recSize = recSize
 	heap.align = align
 	heap.h = nil // No block yet...

@@ -23,6 +23,7 @@ import (
 )
 
 func inSrc () (root, src string) {
+	var dr = ""
 	d, err := os.Getwd(); M.Assert(err == nil, err, 100)
 	for ; d != "." && d != "/" && d != ".."; d = F.Dir(d) {
 		f, err := os.Open(d); M.Assert(err == nil, err, d, 101)
@@ -30,17 +31,18 @@ func inSrc () (root, src string) {
 		list, err := f.Readdirnames(0); M.Assert(err == nil, err, 102)
 		for _, fi := range list {
 			if fi == "go.mod" {
-				dd := d
-				for dd = F.Dir(dd); F.Base(dd) != "src" && dd != "." && dd != "/" && dd != ".."; dd = F.Dir(dd) {
-				}
-				if F.Base(dd) == "src" {
-					return d, dd
-				}
-				return d, ""
+				dr = d
+				break
 			}
 		}
+		if F.Base(d) == "src" {
+			if dr == "" {
+				dr = d
+			}
+			break
+		}
 	}
-	return "", ""
+	return dr, d
 }
 
 func findModsRec (d *os.File, root string, l *[]string) {
