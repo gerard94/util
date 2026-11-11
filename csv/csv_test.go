@@ -2,7 +2,7 @@ package csv
 
 import (
 	
-	R	"git.duniter.org/gerard94/util/resources"
+	R	"github.com/gerard94/util/resources"
 		"testing"
 		"fmt"
 

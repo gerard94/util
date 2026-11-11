@@ -16,9 +16,9 @@ package api
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/babel/compil"
-	M	"git.duniter.org/gerard94/util/misc"
-	S	"git.duniter.org/gerard94/util/sets"
+	C	"github.com/gerard94/util/babel/compil"
+	M	"github.com/gerard94/util/misc"
+	S	"github.com/gerard94/util/sets"
 
 )
 

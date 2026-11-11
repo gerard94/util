@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with thi
 package main
 
 import (
-	M	"git.duniter.org/gerard94/util/misc"
+	M	"github.com/gerard94/util/misc"
 		"fmt"
 		"os"
 		"bufio"

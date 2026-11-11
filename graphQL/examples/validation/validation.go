@@ -14,10 +14,10 @@ package validation
 
 import (
 	
-	G	"git.duniter.org/gerard94/util/graphQL"
-	E	"git.duniter.org/gerard94/util/graphQL/exec"
+	G	"github.com/gerard94/util/graphQL"
+	E	"github.com/gerard94/util/graphQL/exec"
 	F	"path/filepath"
-	R	"git.duniter.org/gerard94/util/resources"
+	R	"github.com/gerard94/util/resources"
 
 )
 

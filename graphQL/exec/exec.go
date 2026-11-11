@@ -14,16 +14,16 @@ package exec
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avl"
+	A	"github.com/gerard94/util/avl"
 	F	"path/filepath"
-	G	"git.duniter.org/gerard94/util/graphQL"
-	J	"git.duniter.org/gerard94/util/json"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
+	G	"github.com/gerard94/util/graphQL"
+	J	"github.com/gerard94/util/json"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
 		"fmt"
 		"io"
 		"os"
-	_	"git.duniter.org/gerard94/util/graphQL/exec/static"
+	_	"github.com/gerard94/util/graphQL/exec/static"
 
 )
 

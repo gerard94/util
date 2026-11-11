@@ -2,8 +2,8 @@ package graphQL
 	
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-	S	"git.duniter.org/gerard94/util/extStrings"
+	M	"github.com/gerard94/util/misc"
+	S	"github.com/gerard94/util/extStrings"
 	SC	"strconv"
 		"bytes"
 		"fmt"

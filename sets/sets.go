@@ -15,8 +15,8 @@ package sets
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-	S	"git.duniter.org/gerard94/util/smallSets"
+	M	"github.com/gerard94/util/misc"
+	S	"github.com/gerard94/util/smallSets"
 
 )
 

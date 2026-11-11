@@ -16,19 +16,19 @@ package main
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/babel/api"
+	A	"github.com/gerard94/util/babel/api"
 	B	"bytes"
-	C	"git.duniter.org/gerard94/util/babel/compil"
+	C	"github.com/gerard94/util/babel/compil"
 	F	"path/filepath"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
-	SM	"git.duniter.org/gerard94/util/strMapping"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
+	SM	"github.com/gerard94/util/strMapping"
 		"fmt"
 		"io"
 		"strings"
 		"os"
 		
-	_	"git.duniter.org/gerard94/util/babel/static"
+	_	"github.com/gerard94/util/babel/static"
 
 )
 

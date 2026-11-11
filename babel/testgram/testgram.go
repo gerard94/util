@@ -15,10 +15,10 @@ package main
 /* The module testgram is part of the Babel subsystem, a compiler compiler. testgram tests whether a given text satisfies a given grammar. */
 
 import (
-	A "git.duniter.org/gerard94/util/avl"
-	B "git.duniter.org/gerard94/util/babel/compil"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
+	A "github.com/gerard94/util/avl"
+	B "github.com/gerard94/util/babel/compil"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
 		"bufio"
 		"io"
 		"os"

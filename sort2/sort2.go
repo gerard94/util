@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with thi
 package sort
 	
 	import
-		"git.duniter.org/gerard94/util/alea"
+		"github.com/gerard94/util/alea"
 	
 	type (
 		

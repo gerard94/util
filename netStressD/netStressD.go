@@ -16,11 +16,11 @@ package netStressD
 
 import (
 	
-	S	"git.duniter.org/gerard94/util/sets"
-	M	"git.duniter.org/gerard94/util/misc"
-		"git.duniter.org/gerard94/util/sort"
-	ST	"git.duniter.org/gerard94/util/stack"
-	Q	"git.duniter.org/gerard94/util/queue"
+	S	"github.com/gerard94/util/sets"
+	M	"github.com/gerard94/util/misc"
+		"github.com/gerard94/util/sort"
+	ST	"github.com/gerard94/util/stack"
+	Q	"github.com/gerard94/util/queue"
 
 )
 

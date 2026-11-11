@@ -3,7 +3,7 @@ package sets3
 import (
 	
 	"fmt"
-	"git.duniter.org/gerard94/util/alea"
+	"github.com/gerard94/util/alea"
 	"testing"
 
 )

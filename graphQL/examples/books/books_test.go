@@ -2,10 +2,10 @@ package books
 
 import (
 	
-	E	"git.duniter.org/gerard94/util/graphQL/exec"
+	E	"github.com/gerard94/util/graphQL/exec"
 	F	"path/filepath"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
 		"fmt"
 		"os"
 		"testing"

@@ -5,7 +5,7 @@ package infiniteChan
 
 import (
 	
-	Q	"git.duniter.org/gerard94/util/queue"
+	Q	"github.com/gerard94/util/queue"
 
 )
 

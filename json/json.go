@@ -14,12 +14,12 @@ package json
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/babel/compil"
+	C	"github.com/gerard94/util/babel/compil"
 	F	"path/filepath"
 	J	"encoding/json"
-	M	"git.duniter.org/gerard94/util/misc"
+	M	"github.com/gerard94/util/misc"
 	R	"reflect"
-	RS	"git.duniter.org/gerard94/util/resources"
+	RS	"github.com/gerard94/util/resources"
 	SC	"strconv"
 		"bufio"
 		"bytes"

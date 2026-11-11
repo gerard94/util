@@ -14,7 +14,7 @@ package static
 
 import (
 	
-	SM	"git.duniter.org/gerard94/util/strMapping"
+	SM	"github.com/gerard94/util/strMapping"
 		"io"
 		"io/ioutil"
 		"strings"

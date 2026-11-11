@@ -17,7 +17,7 @@ Use of generic types. The allocated size is greater than the useful size (alloc 
 package storage3
 
 import (
-	M	"git.duniter.org/gerard94/util/misc"
+	M	"github.com/gerard94/util/misc"
 		"unsafe"
 	/*
 	"fmt"

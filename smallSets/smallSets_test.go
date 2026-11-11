@@ -2,8 +2,8 @@ package smallSets
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-		"git.duniter.org/gerard94/util/alea"
+	M	"github.com/gerard94/util/misc"
+		"github.com/gerard94/util/alea"
 		"testing"
 		"fmt"
 		"math"

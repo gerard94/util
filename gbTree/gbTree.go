@@ -16,8 +16,8 @@ package gbTree
 
 import (
 
-	B	"git.duniter.org/gerard94/util/bTree"
-	M	"git.duniter.org/gerard94/util/misc"
+	B	"github.com/gerard94/util/bTree"
+	M	"github.com/gerard94/util/misc"
 	F	"path/filepath"
 		"os"
 		"unsafe"

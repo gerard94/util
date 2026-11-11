@@ -2,9 +2,9 @@ package gbTree
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/alea"
-	L	"git.duniter.org/gerard94/util/leftist"
-	M	"git.duniter.org/gerard94/util/misc"
+	A	"github.com/gerard94/util/alea"
+	L	"github.com/gerard94/util/leftist"
+	M	"github.com/gerard94/util/misc"
 		"testing"
 		"fmt"
 		"strings"

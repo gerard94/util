@@ -16,8 +16,8 @@ package api
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/babel/compil"
-	M	"git.duniter.org/gerard94/util/misc"
+	C	"github.com/gerard94/util/babel/compil"
+	M	"github.com/gerard94/util/misc"
 
 )
 

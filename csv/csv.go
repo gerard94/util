@@ -2,10 +2,10 @@ package csv
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/babel/compil"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
-	SM	"git.duniter.org/gerard94/util/strMapping"
+	C	"github.com/gerard94/util/babel/compil"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
+	SM	"github.com/gerard94/util/strMapping"
 		"bufio"
 		"fmt"
 		"io"

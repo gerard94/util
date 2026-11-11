@@ -2,8 +2,8 @@ package orderedSets
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avlT"
-		"git.duniter.org/gerard94/util/alea"
+	A	"github.com/gerard94/util/avlT"
+		"github.com/gerard94/util/alea"
 		"fmt"
 		"testing"
 

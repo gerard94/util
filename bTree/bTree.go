@@ -22,8 +22,8 @@ package bTree
 
 import (
 
-	A	"git.duniter.org/gerard94/util/avl"
-	M	"git.duniter.org/gerard94/util/misc"
+	A	"github.com/gerard94/util/avl"
+	M	"github.com/gerard94/util/misc"
 		"math"
 		//"time"
 		/*

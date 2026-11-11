@@ -2,7 +2,7 @@ package graphQL
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
+	M	"github.com/gerard94/util/misc"
 	SC	"strconv"
 
 )

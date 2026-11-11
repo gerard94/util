@@ -2,11 +2,11 @@ package main
 
 import (
 	
-	B	"git.duniter.org/gerard94/util/graphQL/examples/books"
-	E	"git.duniter.org/gerard94/util/graphQL/exec"
+	B	"github.com/gerard94/util/graphQL/examples/books"
+	E	"github.com/gerard94/util/graphQL/exec"
 	F	"path/filepath"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
 		"fmt"
 		"os"
 		"sync"

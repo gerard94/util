@@ -2,11 +2,11 @@ package sort
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avl"
+	A	"github.com/gerard94/util/avl"
 	
 		"testing"
 	
-		"git.duniter.org/gerard94/util/alea"
+		"github.com/gerard94/util/alea"
 		"bytes"
 		"fmt"
 		"unicode"

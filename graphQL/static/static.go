@@ -17,8 +17,8 @@ package static
 import (
 	
 	F	"path/filepath"
-	G	"git.duniter.org/gerard94/util/graphQL"
-	SM	"git.duniter.org/gerard94/util/strMapping"
+	G	"github.com/gerard94/util/graphQL"
+	SM	"github.com/gerard94/util/strMapping"
 		"errors"
 		"io"
 		"io/ioutil"

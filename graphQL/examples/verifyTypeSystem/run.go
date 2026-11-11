@@ -2,9 +2,9 @@ package main
 
 import (
 	
-	E	"git.duniter.org/gerard94/util/graphQL/exec"
+	E	"github.com/gerard94/util/graphQL/exec"
 	F	"path/filepath"
-	R	"git.duniter.org/gerard94/util/resources"
+	R	"github.com/gerard94/util/resources"
 
 )
 

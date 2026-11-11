@@ -2,13 +2,13 @@ package books
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avl"
-	E	"git.duniter.org/gerard94/util/graphQL/exec"
+	A	"github.com/gerard94/util/avl"
+	E	"github.com/gerard94/util/graphQL/exec"
 	F	"path/filepath"
-	G	"git.duniter.org/gerard94/util/graphQL"
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
-	S	"git.duniter.org/gerard94/util/sets"
+	G	"github.com/gerard94/util/graphQL"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
+	S	"github.com/gerard94/util/sets"
 		"math"
 		"strings"
 		

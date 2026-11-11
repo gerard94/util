@@ -16,7 +16,7 @@ package static
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/csv"
+	C	"github.com/gerard94/util/csv"
 		"errors"
 
 )

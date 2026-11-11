@@ -2,7 +2,7 @@ package storage2
 
 import (
 	"testing"
-	//M	"git.duniter.org/gerard94/util/misc"
+	//M	"github.com/gerard94/util/misc"
 	"fmt"
 	"unsafe"
 )

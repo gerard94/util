@@ -2,8 +2,8 @@ package graphQL
 	
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-	R	"git.duniter.org/gerard94/util/resources"
+	M	"github.com/gerard94/util/misc"
+	R	"github.com/gerard94/util/resources"
 	T	"testing"
 		"fmt"
 		"os"

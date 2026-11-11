@@ -1,5 +1,7 @@
-module git.duniter.org/gerard94/util
+module github.com/gerard94/util
 
-go 1.24
+go 1.27
 
-replace git.duniter.org/gerard94/util => ./
+replace github.com/gerard94/util => ./
+
+require github.com/gerard94/util v0.0.0-00010101000000-000000000000

@@ -16,8 +16,8 @@ package api
 
 import (
 	
-	C	"git.duniter.org/gerard94/util/sets"
-	M	"git.duniter.org/gerard94/util/misc"
+	C	"github.com/gerard94/util/sets"
+	M	"github.com/gerard94/util/misc"
 	U	"unicode"
 		"math"
 

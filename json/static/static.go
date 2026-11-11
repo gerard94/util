@@ -16,7 +16,7 @@ package static
 
 import (
 	
-	J	"git.duniter.org/gerard94/util/json"
+	J	"github.com/gerard94/util/json"
 		"errors"
 
 )

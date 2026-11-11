@@ -2,8 +2,8 @@ package graphQL
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avl"
-	J	"git.duniter.org/gerard94/util/json"
+	A	"github.com/gerard94/util/avl"
+	J	"github.com/gerard94/util/json"
 
 )
 

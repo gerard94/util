@@ -3,8 +3,8 @@ package orderedSets
 
 import (
 	
-	A	"git.duniter.org/gerard94/util/avlT"
-	M	"git.duniter.org/gerard94/util/misc"
+	A	"github.com/gerard94/util/avlT"
+	M	"github.com/gerard94/util/misc"
 
 )
 

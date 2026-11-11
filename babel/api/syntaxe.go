@@ -16,8 +16,8 @@ package api
 
 import (
 	
-	M	"git.duniter.org/gerard94/util/misc"
-	S	"git.duniter.org/gerard94/util/sets2"
+	M	"github.com/gerard94/util/misc"
+	S	"github.com/gerard94/util/sets2"
 
 )
 

@@ -3,11 +3,11 @@ package main
 import (
 	
 //	F	"path/filepath"
-	R	"git.duniter.org/gerard94/util/resources"
-	V	"git.duniter.org/gerard94/util/graphQL/examples/validation"
+	R	"github.com/gerard94/util/resources"
+	V	"github.com/gerard94/util/graphQL/examples/validation"
 		"fmt"
 		"os"
-	_	"git.duniter.org/gerard94/util/graphQL/static"
+	_	"github.com/gerard94/util/graphQL/static"
 
 )
 
